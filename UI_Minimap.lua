@@ -47,7 +47,10 @@ function MM.Create()
   MM.created = true
   local obj = LDB:NewDataObject("LegacyManager", {
     type = "launcher", label = "LegacyManager", icon = ICON,
-    OnClick = function() ns.SafeCall("minimapClick", MM.OpenLegacy) end,
+    OnClick = function(_, button)
+      if button == "RightButton" then ns.SafeCall("minimapMatrix", ns.UIMatrix.Toggle)
+      else ns.SafeCall("minimapClick", MM.OpenLegacy) end
+    end,
     OnTooltipShow = function(tt) ns.SafeCall("minimapTip", fillTooltip, tt) end,
   })
   local m = ns.db.minimap
@@ -65,7 +68,10 @@ function MM.ToggleShown()
 end
 
 -- Blizzard addon compartment (stays reachable when minimap buttons are collected)
-function LegacyManager_OnAddonCompartmentClick() ns.SafeCall("compartment", MM.OpenLegacy) end
+function LegacyManager_OnAddonCompartmentClick(_, button)
+  if button == "RightButton" then ns.SafeCall("compartmentMatrix", ns.UIMatrix.Toggle)
+  else ns.SafeCall("compartment", MM.OpenLegacy) end
+end
 function LegacyManager_OnAddonCompartmentEnter(_, frame)
   GameTooltip:SetOwner(frame, "ANCHOR_LEFT")
   ns.SafeCall("compartmentTip", fillTooltip, GameTooltip)

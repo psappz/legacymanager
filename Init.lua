@@ -1,10 +1,18 @@
 local ADDON, ns = ...
 local U, D, LG = ns.U, ns.Data, ns.Legacy
 
-local function snapshotSoon(delay) ns.Schedule("snapshot", delay or 2, D.Snapshot) end
+local function snapshotSoon(delay)
+  ns.Schedule("snapshot", delay or 2, function()
+    D.Snapshot()
+    ns.UICopilot.Redraw()
+  end)
+end
 
 local function attachLegacyUI()
-  if LegacySystemFrame then ns.SafeCall("attach", ns.UILegacy.Attach) end
+  if LegacySystemFrame then
+    ns.SafeCall("attach", ns.UILegacy.Attach)
+    ns.SafeCall("attachCopilot", ns.UICopilot.Attach)
+  end
 end
 
 local function announceReady()
@@ -32,6 +40,8 @@ SlashCmdList.LEGACYMANAGER = function(msg)
   elseif cmd == "status" then
     for _, l in ipairs(ns.Minimap.StatusLines()) do U.Print(l[1]) end
   elseif cmd == "minimap" then ns.Minimap.ToggleShown()
+  elseif cmd == "matrix" or cmd == "alts" then ns.SafeCall("matrix", ns.UIMatrix.Toggle)
+  elseif cmd == "copilot" then ns.UICopilot.ToggleShown()
   elseif cmd == "errors" then showErrors()
   elseif cmd == "clearerrors" then ns.db.errors = {}; ns.db.unseenErrors = false; U.Print(ns.L.ERRORS_CLEARED)
   elseif cmd == "help" or cmd == "?" then U.Print(ns.L.HELP)
@@ -55,7 +65,7 @@ function handlers.PLAYER_LOGIN(self)
   ns.Minimap.Create()
   if U.IsAddOnLoaded("Blizzard_LegacySystem") then attachLegacyUI() end
   for _, e in ipairs({ "PLAYER_LEVEL_UP", "PLAYER_XP_UPDATE", "UPDATE_EXHAUSTION", "SKILL_LINES_CHANGED",
-    "TRAIT_CONFIG_UPDATED", "ACHIEVEMENT_EARNED", "MAJOR_FACTION_RENOWN_LEVEL_CHANGED",
+    "TRAIT_CONFIG_UPDATED", "ACHIEVEMENT_EARNED", "CRITERIA_UPDATE", "MAJOR_FACTION_RENOWN_LEVEL_CHANGED",
     "PLAYER_LEAVING_WORLD", "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT" }) do
     pcall(self.RegisterEvent, self, e)
   end
@@ -78,6 +88,12 @@ end
 
 function handlers.ACHIEVEMENT_EARNED()
   ns.Schedule("lmRefresh", 0.5, ns.UILegacy.RefreshAll)
+  ns.UICopilot.DataChanged()
+end
+
+-- Criteria progress arrives in bursts (every kill, every quest): collect it.
+function handlers.CRITERIA_UPDATE()
+  ns.Schedule("lmCriteria", 3, ns.UICopilot.DataChanged)
 end
 
 function handlers.MAJOR_FACTION_RENOWN_LEVEL_CHANGED(factionID)
