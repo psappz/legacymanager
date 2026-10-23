@@ -12,6 +12,7 @@ local function attachLegacyUI()
   if LegacySystemFrame then
     ns.SafeCall("attach", ns.UILegacy.Attach)
     ns.SafeCall("attachCopilot", ns.UICopilot.Attach)
+    ns.SafeCall("attachLoadouts", ns.UILoadouts.Attach)
   end
 end
 
@@ -42,6 +43,10 @@ SlashCmdList.LEGACYMANAGER = function(msg)
   elseif cmd == "minimap" then ns.Minimap.ToggleShown()
   elseif cmd == "matrix" or cmd == "alts" then ns.SafeCall("matrix", ns.UIMatrix.Toggle)
   elseif cmd == "copilot" then ns.UICopilot.ToggleShown()
+  elseif cmd == "names" then ns.UILoadouts.ToggleNames()
+  elseif cmd == "raidwarn" then
+    ns.db.raidWarning = ns.db.raidWarning == false
+    U.Print(ns.db.raidWarning and ns.L.RAIDWARN_ON or ns.L.RAIDWARN_OFF)
   elseif cmd == "errors" then showErrors()
   elseif cmd == "clearerrors" then ns.db.errors = {}; ns.db.unseenErrors = false; U.Print(ns.L.ERRORS_CLEARED)
   elseif cmd == "help" or cmd == "?" then U.Print(ns.L.HELP)
@@ -66,7 +71,8 @@ function handlers.PLAYER_LOGIN(self)
   if U.IsAddOnLoaded("Blizzard_LegacySystem") then attachLegacyUI() end
   for _, e in ipairs({ "PLAYER_LEVEL_UP", "PLAYER_XP_UPDATE", "UPDATE_EXHAUSTION", "SKILL_LINES_CHANGED",
     "TRAIT_CONFIG_UPDATED", "ACHIEVEMENT_EARNED", "CRITERIA_UPDATE", "MAJOR_FACTION_RENOWN_LEVEL_CHANGED",
-    "PLAYER_LEAVING_WORLD", "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT" }) do
+    "PLAYER_LEAVING_WORLD", "PLAYER_ENTERING_WORLD", "PLAYER_LOGOUT",
+    "GOSSIP_SHOW", "CONFIRM_TALENT_WIPE", "GROUP_ROSTER_UPDATE", "PLAYER_TALENT_UPDATE", "CHARACTER_POINTS_CHANGED" }) do
     pcall(self.RegisterEvent, self, e)
   end
   snapshotSoon(3)
@@ -84,7 +90,24 @@ handlers.SKILL_LINES_CHANGED = handlers.PLAYER_XP_UPDATE
 function handlers.TRAIT_CONFIG_UPDATED()
   snapshotSoon(1)
   ns.Schedule("lmRefresh", 0.2, ns.UILegacy.RefreshAll)
+  ns.Schedule("lmLoadoutRefresh", 0.3, ns.UILoadouts.Refresh)
+  ns.SafeCall("swapConfig", ns.Swap.OnConfigUpdated)
 end
+
+function handlers.GOSSIP_SHOW()
+  ns.SafeCall("swapGossip", ns.Swap.OnGossipShow)
+  ns.SafeCall("trainerPanel", ns.UITrainer.OnGossipShow)
+end
+
+function handlers.CONFIRM_TALENT_WIPE(cost, respecType)
+  ns.Swap.OnConfirmWipe(cost, respecType)
+end
+
+function handlers.GROUP_ROSTER_UPDATE() ns.Schedule("lmRaid", 2, ns.Swap.CheckRaid) end
+
+-- A class talent reset (step one of "unlearn both") may arrive through these events.
+function handlers.PLAYER_TALENT_UPDATE() ns.Schedule("lmClassReset", 0.3, ns.Swap.OnConfigUpdated) end
+handlers.CHARACTER_POINTS_CHANGED = handlers.PLAYER_TALENT_UPDATE
 
 function handlers.ACHIEVEMENT_EARNED()
   ns.Schedule("lmRefresh", 0.5, ns.UILegacy.RefreshAll)
@@ -106,7 +129,11 @@ end
 
 -- Loading screens and logout: nothing may be recorded while the client tears down.
 function handlers.PLAYER_LEAVING_WORLD() ns.leaving = true end
-function handlers.PLAYER_ENTERING_WORLD() ns.leaving = false; snapshotSoon(3) end
+function handlers.PLAYER_ENTERING_WORLD()
+  ns.leaving = false
+  snapshotSoon(3)
+  ns.Schedule("lmRaid", 5, ns.Swap.CheckRaid)
+end
 function handlers.PLAYER_LOGOUT()
   ns.Unschedule("snapshot")
 end
