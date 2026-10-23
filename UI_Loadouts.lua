@@ -174,15 +174,19 @@ local function treeGates(cfg, treeID)
   return out
 end
 
--- Points a condition asks for: spentAmountRequired, else the number in its tooltip
-local function required(c)
-  if (c.spentAmountRequired or 0) > 0 then return c.spentAmountRequired end
+-- Number in a condition's tooltip ("Spend 3 more points ..."): the points still missing
+local function tooltipNumber(c)
   if c.playerLevel or c.questID or c.achievementID then return nil end
   local text = c.tooltipText or c.tooltipFormat
   local n = text and tonumber(text:gsub("|c%x%x%x%x%x%x%x%x", ""):match("(%d+)"))
   if n and n > 0 and n <= 100 then return n end
 end
+local required = tooltipNumber -- used by /lm gates
 
+-- Requirement of a node in points spent in its tree. The client reports what is still
+-- MISSING (tooltip, and spentAmountRequired while points are staged), and nothing once
+-- the condition is met. Each sighting gives a total = missing + spent; staged points the
+-- API leaves out only make that total smaller, so the largest total seen is kept and shown.
 local function gateOf(cfg, nodeID, gates, spent)
   local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
   if not info then return end
@@ -191,19 +195,14 @@ local function gateOf(cfg, nodeID, gates, spent)
   for _, condID in ipairs(info.conditionIDs or {}) do
     local c = U.Try(C_Traits.GetConditionInfo, cfg, condID, true)
     if c then
-      local n
-      if (c.spentAmountRequired or 0) > 0 then
-        n = c.spentAmountRequired
-      elseif not c.isMet then
-        -- The tooltip counts staged points, the API may not: a value learned with staged
-        -- points comes out too small, never too large. Keep the largest value seen.
-        local missing = required(c)
-        if missing then
-          local total = missing + (spent or 0)
-          if total > (ns.db.gateNeed[condID] or 0) then ns.db.gateNeed[condID] = total end
-        end
+      local tip, sar = tooltipNumber(c), c.spentAmountRequired or 0
+      if not c.isMet and (tip or sar > 0) then
+        local total
+        if tip and (sar == 0 or sar == tip) then total = tip + (spent or 0) -- both name the missing points
+        elseif sar > 0 then total = sar end                                 -- a real total
+        if total and total > (ns.db.gateNeed[condID] or 0) then ns.db.gateNeed[condID] = total end
       end
-      n = n or ns.db.gateNeed[condID]
+      local n = ns.db.gateNeed[condID]
       if n and n > (need or 0) then need, met = n, c.isMet end
     end
   end
