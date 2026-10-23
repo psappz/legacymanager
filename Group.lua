@@ -65,29 +65,35 @@ function GR.Channel()
   return nil
 end
 
-local function ownRealm()
-  return (GetNormalizedRealmName and GetNormalizedRealmName()) or (GetRealmName() or ""):gsub("%s", "")
+local function squash(realm) return (realm or ""):gsub("[%s%-]", ""):lower() end
+
+local function isOwnRealm(realm)
+  realm = squash(realm)
+  if realm == "" then return true end
+  local _, unitRealm = UnitName("player")
+  return realm == squash(GetNormalizedRealmName and GetNormalizedRealmName())
+    or realm == squash(GetRealmName and GetRealmName())
+    or realm == squash(unitRealm)
 end
 
--- "Name-Realm" for a unit, realm without spaces like in addon messages
+local function makeKey(name, realm)
+  if isOwnRealm(realm) then return name end
+  return name .. "-" .. (realm or ""):gsub("%s", "")
+end
+
 local function unitKey(unit)
   local name, realm = UnitName(unit)
   if not name or name == "" or name == UNKNOWNOBJECT then return nil end
-  realm = (realm and realm ~= "") and realm:gsub("%s", "") or ownRealm()
-  return name .. "-" .. realm
+  return makeKey(name, realm)
 end
 
 local function senderKey(sender)
-  if sender:find("-", 1, true) then return sender end
-  return sender .. "-" .. ownRealm()
+  local name, realm = sender:match("^([^%-]+)%-?(.*)$")
+  return makeKey(name or sender, realm)
 end
 
--- Name for display: the realm only for players of other realms
-function GR.DisplayName(key)
-  local name, realm = (key or "?"):match("^([^%-]+)%-?(.*)$")
-  if realm == "" or realm == ownRealm() then return name end
-  return name .. "-" .. realm
-end
+-- Keys already are display names: plain for the own realm, "Name-Realm" otherwise
+function GR.DisplayName(key) return key or "?" end
 
 -- { { name, unit, class, level, self } ... } in group order
 function GR.Roster()

@@ -177,6 +177,14 @@ end
 local function gateOf(cfg, nodeID, gates)
   local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
   if not info then return end
+  local need, met
+  for _, condID in ipairs(info.conditionIDs or {}) do
+    local c = U.Try(C_Traits.GetConditionInfo, cfg, condID)
+    if c and (c.isGate or (c.spentAmountRequired or 0) > 0) and (c.spentAmountRequired or 0) > (need or 0) then
+      need, met = c.spentAmountRequired, c.isMet
+    end
+  end
+  if need then return need, met end
   local best
   for _, g in ipairs(gates) do
     if info.posX >= g.x and (not best or g.need > best.need) then best = g end
@@ -195,9 +203,13 @@ local function decorateButton(button, cfg, gates)
     fs:SetWordWrap(false)
     fs:SetTextColor(0.93, 0.89, 0.81)
     button.lmName = fs
-    local g = button:CreateFontString(nil, "OVERLAY")
-    g:SetFont(STANDARD_TEXT_FONT, 10, "OUTLINE")
-    g:SetPoint("TOPLEFT", button, "TOPLEFT", -4, 4)
+    local holder = CreateFrame("Frame", nil, button)
+    holder:SetSize(30, 14)
+    holder:SetPoint("BOTTOMLEFT", button, "TOPLEFT", -2, 1)
+    holder:SetFrameLevel(button:GetFrameLevel() + 20)
+    local g = holder:CreateFontString(nil, "OVERLAY")
+    g:SetFont(STANDARD_TEXT_FONT, 11, "OUTLINE")
+    g:SetPoint("BOTTOMLEFT")
     button.lmGate = g
   end
   local show = ns.db.showPerkNames ~= false
@@ -245,6 +257,30 @@ function UL.Attach()
     EventRegistry:RegisterCallback("Legacy.SelectTree", function() ns.Schedule("lmNodes", 0.1, UL.DecorateNodes) end, owner)
   end
   UL.Refresh()
+end
+
+function UL.DebugGates()
+  local panel = LegacySystemFrame and LegacySystemFrame.TreePage and LegacySystemFrame.TreePage.LegacyTreeTraitPanel
+  if not panel or not panel:IsVisible() then U.Print(ns.L.GATES_OPEN_TREE); return end
+  local cfg, treeID = panel:GetConfigID(), panel:GetTalentTreeID()
+  local tree = U.Try(C_Traits.GetTreeInfo, cfg, treeID)
+  U.Print(("tree %s, config %s, tree gates: %d"):format(tostring(treeID), tostring(cfg), tree and tree.gates and #tree.gates or -1))
+  for _, g in ipairs(tree and tree.gates or {}) do
+    local c = U.Try(C_Traits.GetConditionInfo, cfg, g.conditionID)
+    print(("  gate node %s cond %s need %s met %s"):format(tostring(g.topLeftNodeID), tostring(g.conditionID),
+      tostring(c and c.spentAmountRequired), tostring(c and c.isMet)))
+  end
+  for _, nodeID in ipairs(U.Try(C_Traits.GetTreeNodes, treeID) or {}) do
+    local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
+    if info and info.ID ~= 0 then
+      local parts = {}
+      for _, condID in ipairs(info.conditionIDs or {}) do
+        local c = U.Try(C_Traits.GetConditionInfo, cfg, condID)
+        parts[#parts + 1] = ("%s:gate=%s,need=%s"):format(condID, tostring(c and c.isGate), tostring(c and c.spentAmountRequired))
+      end
+      print(("  %s x=%s y=%s %s"):format(LO.NodeName(nodeID), tostring(info.posX), tostring(info.posY), table.concat(parts, " ")))
+    end
+  end
 end
 
 function UL.ToggleNames()

@@ -147,6 +147,8 @@ LOCALES.enUS = {
   CONFIRM_RESET = "This needs a reset at the class trainer. You confirm its cost in Blizzard's next dialog, then the points above are spent.",
   CONFIRM_LASTCOST = "Last reset cost: %s – the price rises with every reset.",
 
+  GATES_OPEN_TREE = "Open the Legacy tree first, then type /lm gates again.",
+
   -- Errors
   IN_COMBAT = "Not possible in combat – try again afterwards.",
   ERRORS_TITLE = "Error log",
@@ -287,6 +289,8 @@ LOCALES.deDE = {
   CONFIRM_FINAL = "Vergebene Punkte sind fest. Sie später zurückzunehmen braucht einen Reset beim Klassenlehrer, und der kostet Gold.",
   CONFIRM_RESET = "Dafür ist ein Reset beim Klassenlehrer nötig. Die Kosten bestätigst du im nächsten Blizzard-Dialog, danach werden die Punkte oben vergeben.",
   CONFIRM_LASTCOST = "Letzter Reset: %s – der Preis steigt mit jedem Reset.",
+
+  GATES_OPEN_TREE = "Öffne zuerst den Legacy-Baum und gib dann /lm gates noch einmal ein.",
 
   IN_COMBAT = "Im Kampf nicht möglich – versuch es danach noch einmal.",
   ERRORS_TITLE = "Fehlerprotokoll",
