@@ -25,7 +25,7 @@ local function showMemberTooltip(row)
   local m = row.member
   if not m then return end
   GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
-  GameTooltip:SetText(GR.DisplayName(m.name), classColor(m.class))
+  GameTooltip:SetText(m.full or m.name or "?", classColor(m.class))
   if not m.ranks then
     GameTooltip:AddLine(ns.L.GV_NO_ADDON, 0.62, 0.71, 0.78, true)
   else
@@ -143,7 +143,7 @@ function UG.Refresh()
   for _, m in ipairs(roster) do
     if m.self then m.ranks = own
     else
-      local data = m.name and GR.members[m.name]
+      local data = GR.members[m.guid]
       m.ranks = data and data.ranks or nil
     end
     if m.ranks then
@@ -169,7 +169,7 @@ function UG.Refresh()
     local m = roster[r + UG.offset]
     row.member = m
     if m then
-      row.name:SetText(GR.DisplayName(m.name))
+      row.name:SetText(m.name or "?")
       row.name:SetTextColor(classColor(m.class))
       for i, spellID in ipairs(GR.COLUMNS) do
         local cell = row.cells[i]

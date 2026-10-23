@@ -6,13 +6,16 @@ ns.Group = GR
 -- Group view: members running LegacyManager share their Legacy ranks with the
 -- group (party, raid, battleground or other instance group) through addon messages.
 --
+-- Players are matched by their GUID, not by name: WoW Forever gives every
+-- character a first and a last name, and names alone are not unique across realms.
+--
 -- Messages (prefix "LegacyMgr"):
---   "1|R"                          request: everyone answers with their ranks
---   "1|S|<level>|<spell>:<rank>,…" ranks of the sender, keyed by spell ID
---                                  (spell IDs are the same for every client)
--- Unknown versions are ignored, so later formats can coexist.
+--   "2|R"                                 request: everyone answers with their ranks
+--   "2|S|<level>|<guid>|<spell>:<rank>,…" ranks of the sender, keyed by spell ID
+--                                         (spell IDs are the same for every client)
+-- Other versions are ignored, so later formats can coexist.
 
-local PREFIX, VERSION = "LegacyMgr", "1"
+local PREFIX, VERSION = "LegacyMgr", "2"
 local SEND_THROTTLE = 4
 
 -- Perks that matter for a group, by spell ID, in column order.
@@ -24,7 +27,7 @@ GR.COLUMNS = {
   1225501, -- For Great Honor
 }
 
-GR.members = {} -- ["Name" or "Name-Realm"] = { ranks = { [spellID] = rank }, level, t }
+GR.members = {} -- [guid] = { ranks = { [spellID] = rank }, level, t }
 
 ---------------------------------------------------------------------------
 -- Own ranks by spell ID
@@ -65,53 +68,35 @@ function GR.Channel()
   return nil
 end
 
-local function squash(realm) return (realm or ""):gsub("[%s%-]", ""):lower() end
-
-local function isOwnRealm(realm)
-  realm = squash(realm)
-  if realm == "" then return true end
-  local _, unitRealm = UnitName("player")
-  return realm == squash(GetNormalizedRealmName and GetNormalizedRealmName())
-    or realm == squash(GetRealmName and GetRealmName())
-    or realm == squash(unitRealm)
+local function member(unit)
+  local guid = UnitGUID(unit)
+  if not guid then return nil end
+  local name = UnitName(unit)
+  local _, classFile = UnitClass(unit)
+  return {
+    unit = unit, guid = guid, class = classFile, level = UnitLevel(unit),
+    name = (name and name ~= "" and name ~= UNKNOWNOBJECT) and name or "?",
+    full = (GetUnitName and GetUnitName(unit, true)) or name,
+    self = UnitIsUnit(unit, "player") and true or false,
+  }
 end
 
-local function makeKey(name, realm)
-  if isOwnRealm(realm) then return name end
-  return name .. "-" .. (realm or ""):gsub("%s", "")
-end
-
-local function unitKey(unit)
-  local name, realm = UnitName(unit)
-  if not name or name == "" or name == UNKNOWNOBJECT then return nil end
-  return makeKey(name, realm)
-end
-
-local function senderKey(sender)
-  local name, realm = sender:match("^([^%-]+)%-?(.*)$")
-  return makeKey(name or sender, realm)
-end
-
--- Keys already are display names: plain for the own realm, "Name-Realm" otherwise
-function GR.DisplayName(key) return key or "?" end
-
--- { { name, unit, class, level, self } ... } in group order
+-- { { unit, guid, name, full, class, level, self } ... } in group order
 function GR.Roster()
   local out = {}
   local n = GetNumGroupMembers and GetNumGroupMembers() or 0
+  local units = {}
   if n == 0 then
-    out[1] = { name = unitKey("player"), unit = "player", self = true }
+    units[1] = "player"
   elseif IsInRaid() then
-    for i = 1, n do out[#out + 1] = { name = unitKey("raid" .. i), unit = "raid" .. i } end
+    for i = 1, n do units[#units + 1] = "raid" .. i end
   else
-    out[1] = { name = unitKey("player"), unit = "player", self = true }
-    for i = 1, n - 1 do out[#out + 1] = { name = unitKey("party" .. i), unit = "party" .. i } end
+    units[1] = "player"
+    for i = 1, n - 1 do units[#units + 1] = "party" .. i end
   end
-  for _, m in ipairs(out) do
-    local _, classFile = UnitClass(m.unit)
-    m.class = classFile
-    m.level = UnitLevel(m.unit)
-    if UnitIsUnit(m.unit, "player") then m.self = true end
+  for _, unit in ipairs(units) do
+    local m = member(unit)
+    if m then out[#out + 1] = m end
   end
   return out
 end
@@ -131,7 +116,7 @@ function GR.SendRanks()
   local wait = SEND_THROTTLE - (GetTime() - lastSent)
   if wait > 0 then ns.Schedule("lmGroupSend", wait, GR.SendRanks); return end
   lastSent = GetTime()
-  send(VERSION .. "|S|" .. (UnitLevel("player") or 0) .. "|" .. encode(GR.OwnRanks()))
+  send(VERSION .. "|S|" .. (UnitLevel("player") or 0) .. "|" .. (UnitGUID("player") or "") .. "|" .. encode(GR.OwnRanks()))
 end
 
 local lastRequest = 0
@@ -146,18 +131,17 @@ end
 ---------------------------------------------------------------------------
 -- Receiving
 ---------------------------------------------------------------------------
-function GR.OnMessage(prefix, text, _, sender)
-  if prefix ~= PREFIX or not text or not sender then return end
-  local name = senderKey(sender)
-  if name == unitKey("player") then return end
+function GR.OnMessage(prefix, text)
+  if prefix ~= PREFIX or not text then return end
   local version, kind, rest = text:match("^(%d+)|(%a)|?(.*)$")
   if version ~= VERSION then return end
   if kind == "R" then
     -- spread the answers so a 40-player raid does not answer at once
     ns.Schedule("lmGroupSend", 0.5 + math.random() * 3, GR.SendRanks)
   elseif kind == "S" then
-    local level, payload = rest:match("^(%d+)|(.*)$")
-    GR.members[name] = { ranks = GR.Decode(payload), level = tonumber(level), t = time() }
+    local level, guid, payload = rest:match("^(%d+)|([^|]+)|(.*)$")
+    if not guid or guid == UnitGUID("player") then return end
+    GR.members[guid] = { ranks = GR.Decode(payload), level = tonumber(level), t = time() }
     if ns.UIGroup then ns.Schedule("lmGroupUI", 0.2, ns.UIGroup.Refresh) end
   end
 end
@@ -168,8 +152,8 @@ function GR.OnRosterChanged()
   local channel = GR.Channel()
   if not channel then GR.members = {}; lastChannel = nil; return end
   local present = {}
-  for _, m in ipairs(GR.Roster()) do if m.name then present[m.name] = true end end
-  for name in pairs(GR.members) do if not present[name] then GR.members[name] = nil end end
+  for _, m in ipairs(GR.Roster()) do present[m.guid] = true end
+  for guid in pairs(GR.members) do if not present[guid] then GR.members[guid] = nil end end
   if channel ~= lastChannel then
     lastChannel = channel
     ns.Schedule("lmGroupReq", 2, GR.Request)
