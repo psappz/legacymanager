@@ -10,10 +10,14 @@ An addon for **World of Warcraft: Forever** that makes the Legacy system easier 
 - **Copilot** next to the Legacy window: the quickest next Legacy points across all your characters, with rested XP, plus a hint in every challenge card (earned by / closest character).
 - **Alt overview**: classes and crafting professions against their Legacy milestones, Normal and Hardcore separately, with profession planning.
 - **Loadouts**: save your Legacy trees as named loadouts (raid, farming, crafting, leveling …), with perk names and requirements shown in the tree.
-- **Quick swap at the class trainer**: one click picks the trainer's option, you confirm Blizzard's cost dialog, and the loadout is spent automatically. Free points are spent anywhere.
+- **Quick swap at the class trainer**: pick a loadout, review the listed changes, confirm Blizzard's cost dialog – nothing is spent without your confirmation. Free points can be spent anywhere.
 - **Talented guard**: below level 60 the trainer only resets Legacy talents once your class talents are unlearned – LegacyManager explains this and can unlearn both in one guided flow.
 - **Raid warning** when you join a raid without your raid loadout.
 - **Group view** for party, raid and battleground: which members have Permanence, Gourmand, Reagent Economy and more (members need LegacyManager too).
+
+## Languages
+
+English, German, French, Spanish, Italian, Brazilian Portuguese, Russian, Korean, Simplified and Traditional Chinese. Corrections from native speakers are welcome.
 
 ## Commands
 
