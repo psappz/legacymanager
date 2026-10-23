@@ -80,7 +80,8 @@ function CP.ForChallenge(ch, chars)
     return {
       ch = ch, char = c, pct = pct,
       who = c.name .. " · " .. L.CP_LEVEL:format(c.level or 1, ch.level),
-      detail = L.CP_LEVELUP:format(CP.ToLevelUpPct(c), CP.RestedPct(c)),
+      -- "Only …" just for the last half of a level
+      detail = (CP.ToLevelUpPct(c) < 50 and L.CP_LEVELUP or L.CP_LEVELUP_FAR):format(CP.ToLevelUpPct(c), CP.RestedPct(c)),
     }
   elseif ch.kind == "prof" then
     local c, rank = CP.BestOfProf(chars, ch.skill, ch.skillReq)
