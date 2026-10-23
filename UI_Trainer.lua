@@ -3,7 +3,7 @@ local U, W, LO, SW = ns.U, ns.W, ns.Loadouts, ns.Swap
 local UT = {}
 ns.UITrainer = UT
 
-local PANEL_W, MAX_LOADOUTS, MAX_ROWS = 340, 8, 8
+local PANEL_W, MAX_LOADOUTS, MAX_ROWS = 340, 8, 7
 
 ---------------------------------------------------------------------------
 -- Quick swap panel next to the class trainer's dialog
@@ -67,10 +67,10 @@ local function build()
   end
 
   -- Talented warning
-  local warn = W.Box(p, PANEL_W - 24, 60)
+  local warn = W.Box(p, PANEL_W - 24, 86)
   warn:SetBackdropColor(0.165, 0.114, 0.063, 1)
   warn:SetBackdropBorderColor(0.94, 0.71, 0.35, 1)
-  warn:SetPoint("BOTTOMLEFT", 12, 52)
+  warn:SetPoint("BOTTOMLEFT", 12, 90)
   warn.text = warn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   warn.text:SetPoint("TOPLEFT", 8, -6)
   warn.text:SetPoint("RIGHT", -8, 0)
@@ -82,8 +82,9 @@ local function build()
   p.warn = warn
 
   p.cost = p:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  p.cost:SetPoint("BOTTOMLEFT", 12, 20)
-  p.cost:SetPoint("RIGHT", -150, 0)
+  -- full width above the apply button, so the two lines never run into the warning box
+  p.cost:SetPoint("BOTTOMLEFT", 12, 50)
+  p.cost:SetPoint("RIGHT", -12, 0)
   p.cost:SetJustifyH("LEFT")
   p.cost:SetTextColor(0.62, 0.71, 0.78)
 
