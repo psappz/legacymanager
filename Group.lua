@@ -65,9 +65,28 @@ function GR.Channel()
   return nil
 end
 
-local function unitName(unit)
-  local n = GetUnitName and GetUnitName(unit, true)
-  return n and n ~= "" and n or nil
+local function ownRealm()
+  return (GetNormalizedRealmName and GetNormalizedRealmName()) or (GetRealmName() or ""):gsub("%s", "")
+end
+
+-- "Name-Realm" for a unit, realm without spaces like in addon messages
+local function unitKey(unit)
+  local name, realm = UnitName(unit)
+  if not name or name == "" or name == UNKNOWNOBJECT then return nil end
+  realm = (realm and realm ~= "") and realm:gsub("%s", "") or ownRealm()
+  return name .. "-" .. realm
+end
+
+local function senderKey(sender)
+  if sender:find("-", 1, true) then return sender end
+  return sender .. "-" .. ownRealm()
+end
+
+-- Name for display: the realm only for players of other realms
+function GR.DisplayName(key)
+  local name, realm = (key or "?"):match("^([^%-]+)%-?(.*)$")
+  if realm == "" or realm == ownRealm() then return name end
+  return name .. "-" .. realm
 end
 
 -- { { name, unit, class, level, self } ... } in group order
@@ -75,19 +94,18 @@ function GR.Roster()
   local out = {}
   local n = GetNumGroupMembers and GetNumGroupMembers() or 0
   if n == 0 then
-    out[1] = { name = unitName("player"), unit = "player", self = true }
+    out[1] = { name = unitKey("player"), unit = "player", self = true }
   elseif IsInRaid() then
-    for i = 1, n do out[#out + 1] = { name = unitName("raid" .. i), unit = "raid" .. i } end
+    for i = 1, n do out[#out + 1] = { name = unitKey("raid" .. i), unit = "raid" .. i } end
   else
-    out[1] = { name = unitName("player"), unit = "player", self = true }
-    for i = 1, n - 1 do out[#out + 1] = { name = unitName("party" .. i), unit = "party" .. i } end
+    out[1] = { name = unitKey("player"), unit = "player", self = true }
+    for i = 1, n - 1 do out[#out + 1] = { name = unitKey("party" .. i), unit = "party" .. i } end
   end
-  local me = unitName("player")
   for _, m in ipairs(out) do
     local _, classFile = UnitClass(m.unit)
     m.class = classFile
     m.level = UnitLevel(m.unit)
-    if m.name == me then m.self = true end
+    if UnitIsUnit(m.unit, "player") then m.self = true end
   end
   return out
 end
@@ -124,8 +142,8 @@ end
 ---------------------------------------------------------------------------
 function GR.OnMessage(prefix, text, _, sender)
   if prefix ~= PREFIX or not text or not sender then return end
-  local name = Ambiguate and Ambiguate(sender, "none") or sender
-  if name == unitName("player") then return end
+  local name = senderKey(sender)
+  if name == unitKey("player") then return end
   local version, kind, rest = text:match("^(%d+)|(%a)|?(.*)$")
   if version ~= VERSION then return end
   if kind == "R" then

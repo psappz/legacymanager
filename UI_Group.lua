@@ -5,7 +5,8 @@ ns.UIGroup = UG
 
 -- Group view window: one row per group member, the group-relevant perks as columns.
 
-local NAME_W, COL_W, ROW_H, VISIBLE = 150, 82, 22, 15
+local NAME_W, COL_W, ROW_H, VISIBLE, MIN_ROWS = 150, 96, 22, 15, 5
+local TOP = 82 -- title, subtitle and the two-line header
 local COLS = #GR.COLUMNS
 
 local function spellName(spellID)
@@ -24,7 +25,7 @@ local function showMemberTooltip(row)
   local m = row.member
   if not m then return end
   GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
-  GameTooltip:SetText(m.name or "?", classColor(m.class))
+  GameTooltip:SetText(GR.DisplayName(m.name), classColor(m.class))
   if not m.ranks then
     GameTooltip:AddLine(ns.L.GV_NO_ADDON, 0.62, 0.71, 0.78, true)
   else
@@ -46,7 +47,7 @@ local function build()
   if UG.frame then return end
   local L = ns.L
   local width = 28 + NAME_W + COLS * COL_W
-  local f = W.Box(UIParent, width, 120 + VISIBLE * ROW_H)
+  local f = W.Box(UIParent, width, TOP + 44 + VISIBLE * ROW_H)
   f:SetBackdropColor(0.094, 0.125, 0.165, 0.97)
   f:SetFrameStrata("HIGH")
   f:SetPoint("CENTER", 200, 0)
@@ -84,9 +85,12 @@ local function build()
   for i, spellID in ipairs(GR.COLUMNS) do
     local h = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     h:SetPoint("TOPLEFT", 14 + NAME_W + (i - 1) * COL_W, hy)
-    h:SetWidth(COL_W - 6)
+    h:SetWidth(COL_W - 8)
+    h:SetHeight(26)
     h:SetJustifyH("LEFT")
-    h:SetWordWrap(false)
+    h:SetJustifyV("TOP")
+    h:SetWordWrap(true)
+    h:SetMaxLines(2)
     h:SetText(spellName(spellID))
   end
 
@@ -95,7 +99,7 @@ local function build()
     local row = W.Box(f, width - 28, ROW_H - 2)
     row:SetBackdropColor(0.12, 0.165, 0.21, 1)
     row:SetBackdropBorderColor(0, 0, 0, 0)
-    row:SetPoint("TOPLEFT", 14, hy - 16 - (r - 1) * ROW_H)
+    row:SetPoint("TOPLEFT", 14, -TOP - (r - 1) * ROW_H)
     row.name = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     row.name:SetPoint("LEFT", 6, 0)
     row.name:SetWidth(NAME_W - 10)
@@ -158,13 +162,14 @@ function UG.Refresh()
   local channel = GR.Channel()
   f.sub:SetText(channel and L.GV_SUB:format(known, #roster) or L.GV_SOLO)
 
+  f:SetHeight(TOP + 44 + math.max(MIN_ROWS, math.min(VISIBLE, #roster)) * ROW_H)
   local maxOffset = math.max(0, #roster - VISIBLE)
   UG.offset = math.min(UG.offset or 0, maxOffset)
   for r, row in ipairs(f.rows) do
     local m = roster[r + UG.offset]
     row.member = m
     if m then
-      row.name:SetText(m.name or "?")
+      row.name:SetText(GR.DisplayName(m.name))
       row.name:SetTextColor(classColor(m.class))
       for i, spellID in ipairs(GR.COLUMNS) do
         local cell = row.cells[i]
