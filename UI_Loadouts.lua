@@ -183,7 +183,7 @@ local function required(c)
   if n and n > 0 and n <= 100 then return n end
 end
 
-local function gateOf(cfg, nodeID, gates, spent, staged)
+local function gateOf(cfg, nodeID, gates, spent)
   local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
   if not info then return end
   ns.db.gateNeed = ns.db.gateNeed or {}
@@ -194,10 +194,14 @@ local function gateOf(cfg, nodeID, gates, spent, staged)
       local n
       if (c.spentAmountRequired or 0) > 0 then
         n = c.spentAmountRequired
-      elseif not c.isMet and not staged then
-        -- learn only without staged points: the tooltip counts them, the API does not
+      elseif not c.isMet then
+        -- The tooltip counts staged points, the API may not: a value learned with staged
+        -- points comes out too small, never too large. Keep the largest value seen.
         local missing = required(c)
-        if missing then n = missing + (spent or 0); ns.db.gateNeed[condID] = n end
+        if missing then
+          local total = missing + (spent or 0)
+          if total > (ns.db.gateNeed[condID] or 0) then ns.db.gateNeed[condID] = total end
+        end
       end
       n = n or ns.db.gateNeed[condID]
       if n and n > (need or 0) then need, met = n, c.isMet end
@@ -211,7 +215,7 @@ local function gateOf(cfg, nodeID, gates, spent, staged)
   if best then return best.need, best.met end
 end
 
-local function decorateButton(button, cfg, gates, spent, staged)
+local function decorateButton(button, cfg, gates, spent)
   local nodeID = button.GetNodeID and button:GetNodeID()
   if not nodeID then return end
   if not button.lmName then
@@ -234,7 +238,7 @@ local function decorateButton(button, cfg, gates, spent, staged)
   local show = ns.db.showPerkNames ~= false
   local name = LO.NodeName(nodeID)
   button.lmName:SetText((show and name:sub(1, 1) ~= "#") and name or "")
-  local need, met = gateOf(cfg, nodeID, gates, spent, staged)
+  local need, met = gateOf(cfg, nodeID, gates, spent)
   if need and show then
     button.lmGate:SetText(need .. "+")
     if met then button.lmGate:SetTextColor(0.56, 0.89, 0.62) else button.lmGate:SetTextColor(0.94, 0.71, 0.35) end
@@ -250,11 +254,10 @@ function UL.DecorateNodes()
   if not cfg then return end
   local treeID = panel.GetTalentTreeID and panel:GetTalentTreeID()
   local gates = treeGates(cfg, treeID)
-  local cur = treeID and U.Try(C_Traits.GetTreeCurrencyInfo, cfg, treeID, true)
+  local cur = treeID and U.Try(C_Traits.GetTreeCurrencyInfo, cfg, treeID, false)
   local spent = cur and cur[1] and cur[1].spentInTree or 0
-  local staged = U.Try(C_Traits.ConfigHasStagedChanges, cfg) and true or false
   for button in panel:EnumerateAllTalentButtons() do
-    local ok, err = pcall(decorateButton, button, cfg, gates, spent, staged)
+    local ok, err = pcall(decorateButton, button, cfg, gates, spent)
     if not ok then ns.LogError("decorateNode", err); return end
   end
 end
