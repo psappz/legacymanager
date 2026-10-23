@@ -249,8 +249,12 @@ function UL.DecorateNodes()
   if not cfg then return end
   local treeID = panel.GetTalentTreeID and panel:GetTalentTreeID()
   local gates = treeGates(cfg, treeID)
-  local cur = treeID and U.Try(C_Traits.GetTreeCurrencyInfo, cfg, treeID, false)
-  local spent = cur and cur[1] and cur[1].spentInTree or 0
+  -- points in this tree including staged ones, counted at the nodes (the tooltip counts staged points too)
+  local spent = 0
+  for _, id in ipairs(treeID and U.Try(C_Traits.GetTreeNodes, treeID) or {}) do
+    local n = U.Try(C_Traits.GetNodeInfo, cfg, id)
+    if n and n.ID ~= 0 then spent = spent + (n.currentRank or n.ranksPurchased or 0) end
+  end
   for button in panel:EnumerateAllTalentButtons() do
     local ok, err = pcall(decorateButton, button, cfg, gates, spent)
     if not ok then ns.LogError("decorateNode", err); return end
