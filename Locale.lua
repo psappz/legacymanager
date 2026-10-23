@@ -141,6 +141,12 @@ LOCALES.enUS = {
   GV_COUNT = "%s: %d of %d",
   GV_NOBODY = "Nobody in the group has one of these perks.",
 
+  -- Confirmation
+  CONFIRM_HEAD = "Apply loadout \"%s\"?",
+  CONFIRM_FINAL = "Spent points are final. Taking them back later needs a reset at the class trainer, which costs gold.",
+  CONFIRM_RESET = "This needs a reset at the class trainer. You confirm its cost in Blizzard's next dialog, then the points above are spent.",
+  CONFIRM_LASTCOST = "Last reset cost: %s – the price rises with every reset.",
+
   -- Errors
   IN_COMBAT = "Not possible in combat – try again afterwards.",
   ERRORS_TITLE = "Error log",
@@ -276,6 +282,11 @@ LOCALES.deDE = {
   GV_TOTAL = "%d Punkte vergeben",
   GV_COUNT = "%s: %d von %d",
   GV_NOBODY = "Niemand in der Gruppe hat einen dieser Perks.",
+
+  CONFIRM_HEAD = "Loadout „%s“ anwenden?",
+  CONFIRM_FINAL = "Vergebene Punkte sind fest. Sie später zurückzunehmen braucht einen Reset beim Klassenlehrer, und der kostet Gold.",
+  CONFIRM_RESET = "Dafür ist ein Reset beim Klassenlehrer nötig. Die Kosten bestätigst du im nächsten Blizzard-Dialog, danach werden die Punkte oben vergeben.",
+  CONFIRM_LASTCOST = "Letzter Reset: %s – der Preis steigt mit jedem Reset.",
 
   IN_COMBAT = "Im Kampf nicht möglich – versuch es danach noch einmal.",
   ERRORS_TITLE = "Fehlerprotokoll",

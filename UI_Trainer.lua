@@ -105,8 +105,10 @@ function UT.ApplySelected(unlearnBoth)
   if SW.pending then SW.Cancel(); return end -- the button reads "Cancel" while waiting
   local l = selectedLoadout()
   if not l then return end
-  SW.Apply(l, { unlearnBoth = unlearnBoth })
-  UT.Refresh()
+  ns.UILoadouts.ConfirmApply(l, function()
+    SW.Apply(l, { unlearnBoth = unlearnBoth })
+    UT.Refresh()
+  end)
 end
 
 function UT.Refresh()

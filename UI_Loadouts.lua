@@ -53,6 +53,32 @@ StaticPopupDialogs["LEGACYMANAGER_TALENTED"] = {
   timeout = 0, whileDead = 1, hideOnEscape = 1,
 }
 
+StaticPopupDialogs["LEGACYMANAGER_CONFIRM"] = {
+  text = "%s",
+  button1 = ACCEPT,
+  button2 = CANCEL,
+  OnAccept = function(_, data) ns.SafeCall("confirmApply", data.run) end,
+  showAlert = 1,
+  timeout = 0, whileDead = 1, hideOnEscape = 1,
+}
+
+-- Shows every change of the loadout and asks before anything is spent.
+function UL.ConfirmApply(loadout, run)
+  local L = ns.L
+  local rows, needsReset = LO.Diff(loadout.ranks)
+  if #rows == 0 then U.Print(L.LO_ALREADY:format(loadout.name)); return end
+  local lines = {}
+  for i, d in ipairs(rows) do
+    if i > 8 then lines[#lines + 1] = L.TR_MORE:format(#rows - 8); break end
+    local hex = d.to < d.from and "ffff9b8a" or "ff8fe39f"
+    lines[#lines + 1] = d.name .. "  " .. U.Color(hex, d.from .. " > " .. d.to)
+  end
+  local text = L.CONFIRM_HEAD:format(loadout.name) .. "\n\n" .. table.concat(lines, "\n") .. "\n\n"
+    .. (needsReset and L.CONFIRM_RESET or L.CONFIRM_FINAL)
+  if ns.cdb.wipeCost then text = text .. "\n" .. L.CONFIRM_LASTCOST:format(GetMoneyString(ns.cdb.wipeCost, true)) end
+  StaticPopup_Show("LEGACYMANAGER_CONFIRM", text, nil, { run = run })
+end
+
 local function askName(renameFrom)
   StaticPopup_Show("LEGACYMANAGER_NAME", renameFrom and ns.L.LO_RENAME_PROMPT or ns.L.LO_NAME_PROMPT, nil,
     { rename = renameFrom })
@@ -60,13 +86,14 @@ end
 
 -- Applies a loadout; on a Talented deficit the player chooses first.
 function UL.Apply(loadout)
-  local result = SW.Apply(loadout)
-  if result == "deficit" then
-    StaticPopupDialogs["LEGACYMANAGER_TALENTED"].button1 = ns.L.LO_BOTH
-    StaticPopup_Show("LEGACYMANAGER_TALENTED", ns.L.LO_TALENTED_WARN:format(UnitLevel("player") or 0), nil,
-      { loadout = loadout })
-  end
-  return result
+  UL.ConfirmApply(loadout, function()
+    local result = SW.Apply(loadout)
+    if result == "deficit" then
+      StaticPopupDialogs["LEGACYMANAGER_TALENTED"].button1 = ns.L.LO_BOTH
+      StaticPopup_Show("LEGACYMANAGER_TALENTED", ns.L.LO_TALENTED_WARN:format(UnitLevel("player") or 0), nil,
+        { loadout = loadout })
+    end
+  end)
 end
 
 ---------------------------------------------------------------------------
