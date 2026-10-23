@@ -49,6 +49,7 @@ function MM.Create()
     type = "launcher", label = "LegacyManager", icon = ICON,
     OnClick = function(_, button)
       if button == "RightButton" then ns.SafeCall("minimapMatrix", ns.UIMatrix.Toggle)
+      elseif button == "MiddleButton" then ns.SafeCall("minimapGroup", ns.UIGroup.Toggle)
       else ns.SafeCall("minimapClick", MM.OpenLegacy) end
     end,
     OnTooltipShow = function(tt) ns.SafeCall("minimapTip", fillTooltip, tt) end,

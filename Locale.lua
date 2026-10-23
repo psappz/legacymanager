@@ -6,7 +6,7 @@ local LOCALES = {}
 LOCALES.enUS = {
   LOADED = "Loaded. /lm shows the commands.",
   NOT_FOREVER = "This client has no Legacy system – LegacyManager stays inactive.",
-  HELP = "Commands: /lm (open Legacy window) · /lm matrix (alt overview) · /lm copilot (show/hide panel) · /lm names (perk names in the tree) · /lm raidwarn · /lm seen (mark all challenges as seen) · /lm status · /lm minimap · /lm errors",
+  HELP = "Commands: /lm (open Legacy window) · /lm matrix (alt overview) · /lm copilot (show/hide panel) · /lm group (group view) · /lm names (perk names in the tree) · /lm raidwarn · /lm seen (mark all challenges as seen) · /lm status · /lm minimap · /lm errors",
 
   -- Legacy tree
   TREE_SPENT = "%d / %d spent",
@@ -33,7 +33,7 @@ LOCALES.enUS = {
   REWARD_READY_CHAT = "Legacy reward ready to collect at Innkeeper Wiley in Ratchet: %s",
 
   -- Minimap / compartment
-  MINIMAP_TIP = "Left-click: Legacy window · Right-click: alt overview · Drag: move",
+  MINIMAP_TIP = "Left-click: Legacy window · Right-click: alt overview · Middle-click: group view · Drag: move",
   STATUS_POINTS = "Legacy points: %d earned · %d / %d spent",
   STATUS_FREE = "%d free",
   STATUS_HARDCORE = "Hardcore character",
@@ -127,6 +127,20 @@ LOCALES.enUS = {
   RAIDWARN_ON = "Raid warning on.",
   RAIDWARN_OFF = "Raid warning off.",
 
+  -- Group view
+  BTN_GROUP = "Group view",
+  GV_TITLE = "LegacyManager · Group view",
+  GV_SUB = "%d of %d members share their Legacy perks",
+  GV_SOLO = "Not in a group – only your own perks are shown.",
+  GV_REFRESH = "Refresh",
+  GV_PLAYER = "Player",
+  GV_NO_ADDON = "No LegacyManager – perks unknown.",
+  GV_NO_ADDON_SHORT = "no addon",
+  GV_NONE_SPENT = "No Legacy points spent.",
+  GV_TOTAL = "%d points spent",
+  GV_COUNT = "%s: %d of %d",
+  GV_NOBODY = "Nobody in the group has one of these perks.",
+
   -- Errors
   IN_COMBAT = "Not possible in combat – try again afterwards.",
   ERRORS_TITLE = "Error log",
@@ -138,7 +152,7 @@ LOCALES.enUS = {
 LOCALES.deDE = {
   LOADED = "Geladen. /lm zeigt die Befehle.",
   NOT_FOREVER = "Dieser Client hat kein Legacy-System – LegacyManager bleibt inaktiv.",
-  HELP = "Befehle: /lm (Legacy-Fenster öffnen) · /lm matrix (Alt-Matrix) · /lm copilot (Panel ein/aus) · /lm names (Perk-Namen im Baum) · /lm raidwarn · /lm seen (alle Challenges als gesehen markieren) · /lm status · /lm minimap · /lm errors",
+  HELP = "Befehle: /lm (Legacy-Fenster öffnen) · /lm matrix (Alt-Matrix) · /lm copilot (Panel ein/aus) · /lm group (Gruppen-Sicht) · /lm names (Perk-Namen im Baum) · /lm raidwarn · /lm seen (alle Challenges als gesehen markieren) · /lm status · /lm minimap · /lm errors",
 
   TREE_SPENT = "%d / %d vergeben",
   TREE_OVER = "+%d nur für den Progress Track",
@@ -161,7 +175,7 @@ LOCALES.deDE = {
   REWARD_READY = "Abholbereit bei Gastwirt Wiley in Ratschet: %s",
   REWARD_READY_CHAT = "Legacy-Belohnung abholbereit bei Gastwirt Wiley in Ratschet: %s",
 
-  MINIMAP_TIP = "Linksklick: Legacy-Fenster · Rechtsklick: Alt-Matrix · Ziehen: verschieben",
+  MINIMAP_TIP = "Linksklick: Legacy-Fenster · Rechtsklick: Alt-Matrix · Mittelklick: Gruppen-Sicht · Ziehen: verschieben",
   STATUS_POINTS = "Legacy-Punkte: %d verdient · %d / %d vergeben",
   STATUS_FREE = "%d frei",
   STATUS_HARDCORE = "Hardcore-Charakter",
@@ -249,6 +263,19 @@ LOCALES.deDE = {
   RAID_WARN = "Du bist in einer Raidgruppe. Dein Raid-Loadout ist nicht aktiv – geh zum Klassenlehrer, wenn du es aktiv schalten willst.",
   RAIDWARN_ON = "Raid-Warnung eingeschaltet.",
   RAIDWARN_OFF = "Raid-Warnung ausgeschaltet.",
+
+  BTN_GROUP = "Gruppen-Sicht",
+  GV_TITLE = "LegacyManager · Gruppen-Sicht",
+  GV_SUB = "%d von %d Mitgliedern teilen ihre Legacy-Perks",
+  GV_SOLO = "Nicht in einer Gruppe – nur deine eigenen Perks werden gezeigt.",
+  GV_REFRESH = "Aktualisieren",
+  GV_PLAYER = "Spieler",
+  GV_NO_ADDON = "Kein LegacyManager – Perks unbekannt.",
+  GV_NO_ADDON_SHORT = "kein Addon",
+  GV_NONE_SPENT = "Keine Legacy-Punkte vergeben.",
+  GV_TOTAL = "%d Punkte vergeben",
+  GV_COUNT = "%s: %d von %d",
+  GV_NOBODY = "Niemand in der Gruppe hat einen dieser Perks.",
 
   IN_COMBAT = "Im Kampf nicht möglich – versuch es danach noch einmal.",
   ERRORS_TITLE = "Fehlerprotokoll",

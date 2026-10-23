@@ -3,7 +3,7 @@
 ## Notes: Loadouts, quick swap and a copilot for the Legacy system of WoW Forever.
 ## Notes-deDE: Loadouts, Quick Swap und ein Copilot für das Legacy-System von WoW Forever.
 ## Author: psappz
-## Version: 0.3.0
+## Version: 0.4.0
 ## IconTexture: Interface\Icons\achievement_guildperk_everybodysfriend
 ## AddonCompartmentFunc: LegacyManager_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: LegacyManager_OnAddonCompartmentEnter
@@ -25,11 +25,13 @@ Challenges.lua
 Copilot.lua
 Loadouts.lua
 Swap.lua
+Group.lua
 Widgets.lua
 UI_Legacy.lua
 UI_Copilot.lua
 UI_Matrix.lua
 UI_Loadouts.lua
 UI_Trainer.lua
+UI_Group.lua
 UI_Minimap.lua
 Init.lua

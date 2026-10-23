@@ -44,6 +44,7 @@ SlashCmdList.LEGACYMANAGER = function(msg)
   elseif cmd == "matrix" or cmd == "alts" then ns.SafeCall("matrix", ns.UIMatrix.Toggle)
   elseif cmd == "copilot" then ns.UICopilot.ToggleShown()
   elseif cmd == "names" then ns.UILoadouts.ToggleNames()
+  elseif cmd == "group" or cmd == "raid" then ns.SafeCall("group", ns.UIGroup.Toggle)
   elseif cmd == "raidwarn" then
     ns.db.raidWarning = ns.db.raidWarning == false
     U.Print(ns.db.raidWarning and ns.L.RAIDWARN_ON or ns.L.RAIDWARN_OFF)

@@ -133,15 +133,31 @@ end
 ---------------------------------------------------------------------------
 -- Perk names below the nodes and gate badges ("10+") on gated nodes
 ---------------------------------------------------------------------------
-local function gateOf(cfg, nodeID)
-  local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
-  for _, condID in ipairs(info and info.conditionIDs or {}) do
-    local c = U.Try(C_Traits.GetConditionInfo, cfg, condID)
-    if c and (c.spentAmountRequired or 0) > 0 then return c.spentAmountRequired, c.isMet end
+-- Gates of the shown tree: { { x = posX of the gate column, need, met } ... }
+local function treeGates(cfg, treeID)
+  local out = {}
+  local tree = treeID and U.Try(C_Traits.GetTreeInfo, cfg, treeID)
+  for _, g in ipairs(tree and tree.gates or {}) do
+    local node = U.Try(C_Traits.GetNodeInfo, cfg, g.topLeftNodeID)
+    local c = U.Try(C_Traits.GetConditionInfo, cfg, g.conditionID)
+    if node and c and (c.spentAmountRequired or 0) > 0 then
+      out[#out + 1] = { x = node.posX, need = c.spentAmountRequired, met = c.isMet }
+    end
   end
+  return out
 end
 
-local function decorateButton(button, cfg)
+local function gateOf(cfg, nodeID, gates)
+  local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
+  if not info then return end
+  local best
+  for _, g in ipairs(gates) do
+    if info.posX >= g.x and (not best or g.need > best.need) then best = g end
+  end
+  if best then return best.need, best.met end
+end
+
+local function decorateButton(button, cfg, gates)
   local nodeID = button.GetNodeID and button:GetNodeID()
   if not nodeID then return end
   if not button.lmName then
@@ -160,7 +176,7 @@ local function decorateButton(button, cfg)
   local show = ns.db.showPerkNames ~= false
   local name = LO.NodeName(nodeID)
   button.lmName:SetText((show and name:sub(1, 1) ~= "#") and name or "")
-  local need, met = gateOf(cfg, nodeID)
+  local need, met = gateOf(cfg, nodeID, gates)
   if need and show then
     button.lmGate:SetText(need .. "+")
     if met then button.lmGate:SetTextColor(0.56, 0.89, 0.62) else button.lmGate:SetTextColor(0.94, 0.71, 0.35) end
@@ -174,8 +190,9 @@ function UL.DecorateNodes()
   if not panel or not panel:IsVisible() or not panel.EnumerateAllTalentButtons then return end
   local cfg = panel.GetConfigID and panel:GetConfigID()
   if not cfg then return end
+  local gates = treeGates(cfg, panel.GetTalentTreeID and panel:GetTalentTreeID())
   for button in panel:EnumerateAllTalentButtons() do
-    local ok, err = pcall(decorateButton, button, cfg)
+    local ok, err = pcall(decorateButton, button, cfg, gates)
     if not ok then ns.LogError("decorateNode", err); return end
   end
 end

@@ -2,8 +2,6 @@
 
 An addon for **World of Warcraft: Forever** that makes the Legacy system easier to use.
 
-> Work in progress – the group view of Legacy perks is still to come.
-
 ## Features
 
 - **Clear point summary** in the Legacy tree: points spent against the seasonal limit, and how many earned points only count for the Progress Track.
@@ -15,10 +13,11 @@ An addon for **World of Warcraft: Forever** that makes the Legacy system easier 
 - **Quick swap at the class trainer**: one click picks the trainer's option, you confirm Blizzard's cost dialog, and the loadout is spent automatically. Free points are spent anywhere.
 - **Talented guard**: below level 60 the trainer only resets Legacy talents once your class talents are unlearned – LegacyManager explains this and can unlearn both in one guided flow.
 - **Raid warning** when you join a raid without your raid loadout.
+- **Group view** for party, raid and battleground: which members have Permanence, Gourmand, Reagent Economy and more (members need LegacyManager too).
 
 ## Commands
 
-`/lm` opens the Legacy window · `/lm matrix` · `/lm copilot` · `/lm names` · `/lm raidwarn` · `/lm seen` · `/lm status` · `/lm minimap` · `/lm errors`
+`/lm` opens the Legacy window · `/lm matrix` · `/lm group` · `/lm copilot` · `/lm names` · `/lm raidwarn` · `/lm seen` · `/lm status` · `/lm minimap` · `/lm errors`
 
 ## License
 

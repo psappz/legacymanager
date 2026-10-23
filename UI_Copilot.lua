@@ -111,7 +111,11 @@ local function build()
 
   local mx = W.Button(p, ns.L.BTN_MATRIX, nil, 26)
   mx:SetPoint("BOTTOMLEFT", 12, 12)
-  mx:SetPoint("BOTTOMRIGHT", -12, 12)
+  mx:SetPoint("BOTTOMRIGHT", p, "BOTTOM", -3, 12)
+  local gv = W.Button(p, ns.L.BTN_GROUP, nil, 26)
+  gv:SetPoint("BOTTOMLEFT", p, "BOTTOM", 3, 12)
+  gv:SetPoint("BOTTOMRIGHT", -12, 12)
+  gv:SetScript("OnClick", function() ns.SafeCall("group", ns.UIGroup.Toggle) end)
   mx:SetScript("OnClick", function() ns.SafeCall("matrix", ns.UIMatrix.Toggle) end)
 
   p:SetScript("OnShow", function() ns.Schedule("lmCopilot", 0, UC.Refresh) end)
