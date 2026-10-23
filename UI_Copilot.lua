@@ -68,9 +68,8 @@ local function build()
   local close = CreateFrame("Button", nil, p, "UIPanelCloseButtonNoScripts")
   close:SetPoint("TOPRIGHT", 2, 2)
   close:SetScript("OnClick", function()
-    ns.db.copilotHidden = true
     p:Hide()
-    U.Print(ns.L.CP_HIDDEN)
+    if not ns.closeHintShown then ns.closeHintShown = true; U.Print(ns.L.CP_CLOSED) end
   end)
 
   -- next reward strip
@@ -214,6 +213,9 @@ function UC.Attach()
   build()
   attachHints()
   UC.panel:SetShown(not ns.db.copilotHidden)
+  LegacySystemFrame:HookScript("OnShow", function()
+    if UC.panel then UC.panel:SetShown(not ns.db.copilotHidden) end
+  end)
 end
 
 function UC.ToggleShown()

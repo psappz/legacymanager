@@ -181,7 +181,6 @@ local function tooltipNumber(c)
   local n = text and tonumber(text:gsub("|c%x%x%x%x%x%x%x%x", ""):match("(%d+)"))
   if n and n > 0 and n <= 100 then return n end
 end
-local required = tooltipNumber -- used by /lm gates
 
 -- Requirement of a node in points spent in its tree. The client reports what is still
 -- MISSING (tooltip, and spentAmountRequired while points are staged), and nothing once
@@ -282,31 +281,6 @@ function UL.Attach()
     EventRegistry:RegisterCallback("Legacy.SelectTree", function() ns.Schedule("lmNodes", 0.1, UL.DecorateNodes) end, owner)
   end
   UL.Refresh()
-end
-
-function UL.DebugGates()
-  local panel = LegacySystemFrame and LegacySystemFrame.TreePage and LegacySystemFrame.TreePage.LegacyTreeTraitPanel
-  if not panel or not panel:IsVisible() then U.Print(ns.L.GATES_OPEN_TREE); return end
-  local cfg, treeID = panel:GetConfigID(), panel:GetTalentTreeID()
-  local tree = U.Try(C_Traits.GetTreeInfo, cfg, treeID)
-  U.Print(("tree %s, config %s, tree gates: %d"):format(tostring(treeID), tostring(cfg), tree and tree.gates and #tree.gates or -1))
-  for _, g in ipairs(tree and tree.gates or {}) do
-    local c = U.Try(C_Traits.GetConditionInfo, cfg, g.conditionID)
-    print(("  gate node %s cond %s need %s met %s"):format(tostring(g.topLeftNodeID), tostring(g.conditionID),
-      tostring(c and c.spentAmountRequired), tostring(c and c.isMet)))
-  end
-  for _, nodeID in ipairs(U.Try(C_Traits.GetTreeNodes, treeID) or {}) do
-    local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
-    if info and info.ID ~= 0 then
-      local parts = {}
-      for _, condID in ipairs(info.conditionIDs or {}) do
-        local c = U.Try(C_Traits.GetConditionInfo, cfg, condID, true)
-        parts[#parts + 1] = ("%s:type=%s,met=%s,need=%s,tip=%s"):format(condID, tostring(c and c.type), tostring(c and c.isMet),
-          tostring(c and required(c)), tostring(c and (c.tooltipText or c.tooltipFormat)))
-      end
-      print(("  %s x=%s y=%s %s"):format(LO.NodeName(nodeID), tostring(info.posX), tostring(info.posY), table.concat(parts, " ")))
-    end
-  end
 end
 
 function UL.ToggleNames()

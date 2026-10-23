@@ -46,6 +46,7 @@ LOCALES.enUS = {
   CP_SUB_HC = "Quickest next points · Hardcore characters",
   CP_EMPTY = "No open challenge with known progress yet. Log in each of your characters once so LegacyManager knows them.",
   CP_HIDDEN = "Copilot panel hidden – /lm copilot shows it again.",
+  CP_CLOSED = "Copilot panel closed until you open the Legacy window again. /lm copilot hides it for good.",
   CP_SHOWN = "Copilot panel shown.",
   CP_LEVEL = "level %d of %d",
   CP_LEVELUP = "Only %d%% to the next level · %d%% rested XP",
@@ -147,8 +148,6 @@ LOCALES.enUS = {
   CONFIRM_RESET = "This needs a reset at the class trainer. You confirm its cost in Blizzard's next dialog, then the points above are spent.",
   CONFIRM_LASTCOST = "Last reset cost: %s – the price rises with every reset.",
 
-  GATES_OPEN_TREE = "Open the Legacy tree first, then type /lm gates again.",
-
   -- Errors
   IN_COMBAT = "Not possible in combat – try again afterwards.",
   ERRORS_TITLE = "Error log",
@@ -195,6 +194,7 @@ LOCALES.deDE = {
   CP_SUB_HC = "Schnellste nächste Punkte · Hardcore-Charaktere",
   CP_EMPTY = "Noch keine offene Challenge mit bekanntem Fortschritt. Logg jeden deiner Charaktere einmal ein, damit LegacyManager ihn kennt.",
   CP_HIDDEN = "Copilot-Panel ausgeblendet – /lm copilot blendet es wieder ein.",
+  CP_CLOSED = "Copilot-Panel geschlossen, bis du das Legacy-Fenster wieder öffnest. /lm copilot blendet es dauerhaft aus.",
   CP_SHOWN = "Copilot-Panel eingeblendet.",
   CP_LEVEL = "Level %d von %d",
   CP_LEVELUP = "Nur noch %d %% bis zum Level-up · %d %% Rested XP",
@@ -289,8 +289,6 @@ LOCALES.deDE = {
   CONFIRM_FINAL = "Vergebene Punkte sind fest. Sie später zurückzunehmen braucht einen Reset beim Klassenlehrer, und der kostet Gold.",
   CONFIRM_RESET = "Dafür ist ein Reset beim Klassenlehrer nötig. Die Kosten bestätigst du im nächsten Blizzard-Dialog, danach werden die Punkte oben vergeben.",
   CONFIRM_LASTCOST = "Letzter Reset: %s – der Preis steigt mit jedem Reset.",
-
-  GATES_OPEN_TREE = "Öffne zuerst den Legacy-Baum und gib dann /lm gates noch einmal ein.",
 
   IN_COMBAT = "Im Kampf nicht möglich – versuch es danach noch einmal.",
   ERRORS_TITLE = "Fehlerprotokoll",

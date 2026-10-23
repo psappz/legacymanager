@@ -20,12 +20,14 @@ D.CRAFTING = { 171, 164, 333, 202, 165, 197 } -- Alchemy, Blacksmithing, Enchant
 D.GATHERING = { 182, 186, 393 }               -- Herbalism, Mining, Skinning
 D.SECONDARY = { 185, 129, 356 }               -- Cooking, First Aid, Fishing
 
-local DB_VERSION = 1
+local DB_VERSION = 2
 
 function D.InitDB()
   LegacyManagerDB = LegacyManagerDB or {}
   local db = LegacyManagerDB
   db.version = db.version or DB_VERSION
+  if db.version < 2 then db.copilotHidden = nil end -- set by the panel's X before 0.4.11
+  db.version = DB_VERSION
   db.chars = db.chars or {}
   for _, c in pairs(db.chars) do c.key = nil end -- written by 0.2.0, not needed
   db.nodes = db.nodes or {}     -- nodeID -> { tree, spellID, maxRanks }, learned from the client
