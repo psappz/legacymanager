@@ -183,14 +183,24 @@ local function required(c)
   if n and n > 0 and n <= 100 then return n end
 end
 
-local function gateOf(cfg, nodeID, gates)
+local function gateOf(cfg, nodeID, gates, spent)
   local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
   if not info then return end
+  ns.db.gateNeed = ns.db.gateNeed or {}
   local need, met
   for _, condID in ipairs(info.conditionIDs or {}) do
     local c = U.Try(C_Traits.GetConditionInfo, cfg, condID, true)
-    local n = c and required(c)
-    if n and n > (need or 0) then need, met = n, c.isMet end
+    if c then
+      local n
+      if (c.spentAmountRequired or 0) > 0 then
+        n = c.spentAmountRequired
+      elseif not c.isMet then
+        local missing = required(c)
+        if missing then n = missing + (spent or 0); ns.db.gateNeed[condID] = n end
+      end
+      n = n or ns.db.gateNeed[condID]
+      if n and n > (need or 0) then need, met = n, c.isMet end
+    end
   end
   if need then return need, met end
   local best
@@ -200,7 +210,7 @@ local function gateOf(cfg, nodeID, gates)
   if best then return best.need, best.met end
 end
 
-local function decorateButton(button, cfg, gates)
+local function decorateButton(button, cfg, gates, spent)
   local nodeID = button.GetNodeID and button:GetNodeID()
   if not nodeID then return end
   if not button.lmName then
@@ -223,7 +233,7 @@ local function decorateButton(button, cfg, gates)
   local show = ns.db.showPerkNames ~= false
   local name = LO.NodeName(nodeID)
   button.lmName:SetText((show and name:sub(1, 1) ~= "#") and name or "")
-  local need, met = gateOf(cfg, nodeID, gates)
+  local need, met = gateOf(cfg, nodeID, gates, spent)
   if need and show then
     button.lmGate:SetText(need .. "+")
     if met then button.lmGate:SetTextColor(0.56, 0.89, 0.62) else button.lmGate:SetTextColor(0.94, 0.71, 0.35) end
@@ -237,9 +247,12 @@ function UL.DecorateNodes()
   if not panel or not panel:IsVisible() or not panel.EnumerateAllTalentButtons then return end
   local cfg = panel.GetConfigID and panel:GetConfigID()
   if not cfg then return end
-  local gates = treeGates(cfg, panel.GetTalentTreeID and panel:GetTalentTreeID())
+  local treeID = panel.GetTalentTreeID and panel:GetTalentTreeID()
+  local gates = treeGates(cfg, treeID)
+  local cur = treeID and U.Try(C_Traits.GetTreeCurrencyInfo, cfg, treeID, false)
+  local spent = cur and cur[1] and cur[1].spentInTree or 0
   for button in panel:EnumerateAllTalentButtons() do
-    local ok, err = pcall(decorateButton, button, cfg, gates)
+    local ok, err = pcall(decorateButton, button, cfg, gates, spent)
     if not ok then ns.LogError("decorateNode", err); return end
   end
 end
