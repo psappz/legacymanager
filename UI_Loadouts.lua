@@ -183,7 +183,7 @@ local function required(c)
   if n and n > 0 and n <= 100 then return n end
 end
 
-local function gateOf(cfg, nodeID, gates, spent)
+local function gateOf(cfg, nodeID, gates, spent, staged)
   local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
   if not info then return end
   ns.db.gateNeed = ns.db.gateNeed or {}
@@ -194,7 +194,8 @@ local function gateOf(cfg, nodeID, gates, spent)
       local n
       if (c.spentAmountRequired or 0) > 0 then
         n = c.spentAmountRequired
-      elseif not c.isMet then
+      elseif not c.isMet and not staged then
+        -- learn only without staged points: the tooltip counts them, the API does not
         local missing = required(c)
         if missing then n = missing + (spent or 0); ns.db.gateNeed[condID] = n end
       end
@@ -210,7 +211,7 @@ local function gateOf(cfg, nodeID, gates, spent)
   if best then return best.need, best.met end
 end
 
-local function decorateButton(button, cfg, gates, spent)
+local function decorateButton(button, cfg, gates, spent, staged)
   local nodeID = button.GetNodeID and button:GetNodeID()
   if not nodeID then return end
   if not button.lmName then
@@ -233,7 +234,7 @@ local function decorateButton(button, cfg, gates, spent)
   local show = ns.db.showPerkNames ~= false
   local name = LO.NodeName(nodeID)
   button.lmName:SetText((show and name:sub(1, 1) ~= "#") and name or "")
-  local need, met = gateOf(cfg, nodeID, gates, spent)
+  local need, met = gateOf(cfg, nodeID, gates, spent, staged)
   if need and show then
     button.lmGate:SetText(need .. "+")
     if met then button.lmGate:SetTextColor(0.56, 0.89, 0.62) else button.lmGate:SetTextColor(0.94, 0.71, 0.35) end
@@ -249,14 +250,11 @@ function UL.DecorateNodes()
   if not cfg then return end
   local treeID = panel.GetTalentTreeID and panel:GetTalentTreeID()
   local gates = treeGates(cfg, treeID)
-  -- points in this tree including staged ones, counted at the nodes (the tooltip counts staged points too)
-  local spent = 0
-  for _, id in ipairs(treeID and U.Try(C_Traits.GetTreeNodes, treeID) or {}) do
-    local n = U.Try(C_Traits.GetNodeInfo, cfg, id)
-    if n and n.ID ~= 0 then spent = spent + (n.currentRank or n.ranksPurchased or 0) end
-  end
+  local cur = treeID and U.Try(C_Traits.GetTreeCurrencyInfo, cfg, treeID, true)
+  local spent = cur and cur[1] and cur[1].spentInTree or 0
+  local staged = U.Try(C_Traits.ConfigHasStagedChanges, cfg) and true or false
   for button in panel:EnumerateAllTalentButtons() do
-    local ok, err = pcall(decorateButton, button, cfg, gates, spent)
+    local ok, err = pcall(decorateButton, button, cfg, gates, spent, staged)
     if not ok then ns.LogError("decorateNode", err); return end
   end
 end
