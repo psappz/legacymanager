@@ -48,8 +48,12 @@ end
 local function build()
   if UC.panel or not LegacySystemFrame then return end
   local p = W.Box(LegacySystemFrame, PANEL_W, 520)
-  p:SetPoint("TOPLEFT", LegacySystemFrame, "TOPRIGHT", 6, 0)
-  p:SetPoint("BOTTOMLEFT", LegacySystemFrame, "BOTTOMRIGHT", 6, 0)
+  -- Blizzard's page tabs hang outside the right edge of the window: start right of them.
+  local tab = LegacySystemFrame.LegacyRewardTrackTab or (LegacySystemFrame.Tabs and LegacySystemFrame.Tabs[1])
+  p:SetPoint("TOP", LegacySystemFrame, "TOP", 0, 0)
+  p:SetPoint("BOTTOM", LegacySystemFrame, "BOTTOM", 0, 0)
+  if tab then p:SetPoint("LEFT", tab, "RIGHT", 6, 0)
+  else p:SetPoint("LEFT", LegacySystemFrame, "RIGHT", 50, 0) end
   p:SetBackdropColor(0.094, 0.125, 0.165, 0.97)
 
   local head = p:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")

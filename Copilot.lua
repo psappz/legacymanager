@@ -13,7 +13,6 @@ function CP.Chars(view)
   local out = {}
   for key, c in pairs(ns.db and ns.db.chars or {}) do
     if view ~= "hardcore" or c.hardcore then
-      c.key = key
       out[#out + 1] = c
     end
   end

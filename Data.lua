@@ -27,6 +27,7 @@ function D.InitDB()
   local db = LegacyManagerDB
   db.version = db.version or DB_VERSION
   db.chars = db.chars or {}
+  for _, c in pairs(db.chars) do c.key = nil end -- written by 0.2.0, not needed
   db.nodes = db.nodes or {}     -- nodeID -> { tree, spellID, maxRanks }, learned from the client
   db.minimap = db.minimap or {}
   db.errors = db.errors or {}

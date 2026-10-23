@@ -143,7 +143,7 @@ local function fillMilestoneRow(row, milestones, cellFor)
     local cell = row.cells[i]
     if m then
       cell:Show()
-      setCell(cell, cellFor(m))
+      setCell(cell, cellFor(m, milestones[i - 1]))
     else
       cell:Hide()
     end
@@ -169,10 +169,11 @@ function UM.Refresh()
     local row = f.classRows[i]
     row.name:SetText(className(classFile))
     row.name:SetTextColor(classColor(classFile))
-    fillMilestoneRow(row, CH.ClassMilestones(classFile), function(m)
+    fillMilestoneRow(row, CH.ClassMilestones(classFile), function(m, prev)
       if m.completed then return "done", CHECK .. (m.earnedBy or "") end
       local c = CP.BestOfClass(chars, classFile, m.level)
-      if c then return "near", L.MX_NEAR_LEVEL:format(c.name, c.level or 1) end
+      -- only in the next open milestone, like the copilot
+      if c and (c.level or 1) >= (prev and prev.level or 1) then return "near", L.MX_NEAR_LEVEL:format(c.name, c.level or 1) end
       return "open", "–"
     end)
   end
@@ -189,10 +190,10 @@ function UM.Refresh()
     local anyone = false
     for _, c in ipairs(chars) do if c.profs and c.profs[skill] then anyone = true end end
     if not anyone then missing[#missing + 1] = CP.ProfName(skill) end
-    fillMilestoneRow(row, CH.ProfMilestones(skill), function(m)
+    fillMilestoneRow(row, CH.ProfMilestones(skill), function(m, prev)
       if m.completed then return "done", CHECK .. (m.earnedBy or "") end
       local c, rank = CP.BestOfProf(chars, skill, m.skillReq or 0)
-      if c then return "near", L.MX_NEAR_SKILL:format(c.name, rank) end
+      if c and rank >= (prev and prev.skillReq or 0) then return "near", L.MX_NEAR_SKILL:format(c.name, rank) end
       return "open", "–"
     end)
   end
