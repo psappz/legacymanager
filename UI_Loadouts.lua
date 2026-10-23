@@ -174,15 +174,23 @@ local function treeGates(cfg, treeID)
   return out
 end
 
+-- Points a condition asks for: spentAmountRequired, else the number in its tooltip
+local function required(c)
+  if (c.spentAmountRequired or 0) > 0 then return c.spentAmountRequired end
+  if c.playerLevel or c.questID or c.achievementID then return nil end
+  local text = c.tooltipText or c.tooltipFormat
+  local n = text and tonumber(text:gsub("|c%x%x%x%x%x%x%x%x", ""):match("(%d+)"))
+  if n and n > 0 and n <= 100 then return n end
+end
+
 local function gateOf(cfg, nodeID, gates)
   local info = U.Try(C_Traits.GetNodeInfo, cfg, nodeID)
   if not info then return end
   local need, met
   for _, condID in ipairs(info.conditionIDs or {}) do
-    local c = U.Try(C_Traits.GetConditionInfo, cfg, condID)
-    if c and (c.isGate or (c.spentAmountRequired or 0) > 0) and (c.spentAmountRequired or 0) > (need or 0) then
-      need, met = c.spentAmountRequired, c.isMet
-    end
+    local c = U.Try(C_Traits.GetConditionInfo, cfg, condID, true)
+    local n = c and required(c)
+    if n and n > (need or 0) then need, met = n, c.isMet end
   end
   if need then return need, met end
   local best
@@ -275,8 +283,9 @@ function UL.DebugGates()
     if info and info.ID ~= 0 then
       local parts = {}
       for _, condID in ipairs(info.conditionIDs or {}) do
-        local c = U.Try(C_Traits.GetConditionInfo, cfg, condID)
-        parts[#parts + 1] = ("%s:gate=%s,need=%s"):format(condID, tostring(c and c.isGate), tostring(c and c.spentAmountRequired))
+        local c = U.Try(C_Traits.GetConditionInfo, cfg, condID, true)
+        parts[#parts + 1] = ("%s:type=%s,met=%s,need=%s,tip=%s"):format(condID, tostring(c and c.type), tostring(c and c.isMet),
+          tostring(c and required(c)), tostring(c and (c.tooltipText or c.tooltipFormat)))
       end
       print(("  %s x=%s y=%s %s"):format(LO.NodeName(nodeID), tostring(info.posX), tostring(info.posY), table.concat(parts, " ")))
     end
