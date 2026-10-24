@@ -1,0 +1,23 @@
+name: Release
+
+# Baut und veröffentlicht bei jedem Tag-Push (z. B. "0.4.14").
+on:
+  push:
+    tags:
+      - "**"
+
+permissions:
+  contents: write # GitHub-Release anlegen
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      CF_API_KEY: ${{ secrets.CF_API_KEY }}
+      GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # Commit-Historie für das Changelog
+
+      - uses: BigWigsMods/packager@v2
