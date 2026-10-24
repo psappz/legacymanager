@@ -17,7 +17,7 @@ An addon for **World of Warcraft: Forever** that makes the Legacy system easier 
 
 ## Languages
 
-English, German, French, Spanish, Italian, Brazilian Portuguese, Russian, Korean, Simplified and Traditional Chinese. Corrections from native speakers are welcome.
+English, German, French, Spanish, Italian, Brazilian Portuguese and Russian. Corrections from native speakers are welcome.
 
 ## Commands
 
