@@ -3,7 +3,7 @@
 ## Notes: Loadouts, quick swap and a copilot for the Legacy system of WoW Forever.
 ## Notes-deDE: Loadouts, Quick Swap und ein Copilot für das Legacy-System von WoW Forever.
 ## Author: psappz
-## Version: 0.4.13
+## Version: 0.4.14
 ## IconTexture: Interface\Icons\achievement_guildperk_everybodysfriend
 ## AddonCompartmentFunc: LegacyManager_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: LegacyManager_OnAddonCompartmentEnter

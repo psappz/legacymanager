@@ -48,8 +48,8 @@ end
 -- Error log: errors in event handlers are kept in the saved variables, so an
 -- error during logout can still be read after the next login (/lm errors).
 ---------------------------------------------------------------------------
-local function logError(where, err)
-  local stack = debugstack and debugstack(3, 12, 0) or ""
+local function logError(where, err, stack)
+  stack = stack or (debugstack and debugstack(3, 12, 0)) or ""
   local db = ns.db
   if db then
     db.errors = db.errors or {}
@@ -61,9 +61,16 @@ local function logError(where, err)
 end
 ns.LogError = logError
 
+-- The handler runs at the error site, so the logged stack shows where it failed.
+local lastStack
+local function captureStack(err)
+  lastStack = debugstack and debugstack(2, 12, 0) or nil
+  return err
+end
+
 function ns.SafeCall(where, fn, ...)
-  local ok, err = pcall(fn, ...)
-  if not ok then logError(where, err) end
+  local ok, err = xpcall(fn, captureStack, ...)
+  if not ok then logError(where, err, lastStack); lastStack = nil end
   return ok, err
 end
 
@@ -73,10 +80,20 @@ end
 ---------------------------------------------------------------------------
 local due, ticker = {}, CreateFrame("Frame")
 ticker:Hide()
+local ready = {}
 ticker:SetScript("OnUpdate", function(self)
   local now = GetTime()
+  -- Collect first: a job may schedule new jobs, and adding keys to `due`
+  -- while pairs() walks it is undefined ("invalid key to 'next'").
   for name, job in pairs(due) do
-    if now >= job.at then
+    if now >= job.at then ready[#ready + 1] = name end
+  end
+  for i = 1, #ready do
+    local name = ready[i]
+    ready[i] = nil
+    local job = due[name]
+    -- An earlier job may have unscheduled or rescheduled this one.
+    if job and now >= job.at then
       due[name] = nil
       ns.SafeCall(name, job.fn)
     end

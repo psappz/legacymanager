@@ -195,14 +195,19 @@ end
 local function attachHints()
   local pane = LegacySystemFrame.ChallengesPage and LegacySystemFrame.ChallengesPage.DetailPane
   local box = pane and pane.ScrollBox
-  if not box or not ScrollUtil or not ScrollUtil.AddInitializedFrameCallback then return end
-  ScrollUtil.AddInitializedFrameCallback(box, decorate, owner, true)
+  if not box or not box.RegisterCallback or not ScrollBoxListMixin then return end
+  -- Not ScrollUtil.AddInitializedFrameCallback(..., true): its "existing frames" pass
+  -- calls the callback as (frame, data) instead of (owner, frame, data), and it errors
+  -- while the ScrollBox has no view yet.
+  box:RegisterCallback(ScrollBoxListMixin.Event.OnInitializedFrame, decorate, owner)
   UC.scrollBox = box
+  UC.RefreshHints()
 end
 
 function UC.RefreshHints()
-  if UC.scrollBox and UC.scrollBox:IsVisible() then
-    UC.scrollBox:ForEachFrame(function(frame, elementData) decorate(nil, frame, elementData) end)
+  local box = UC.scrollBox
+  if box and box:IsVisible() and box.GetView and box:GetView() then
+    box:ForEachFrame(function(frame, elementData) decorate(nil, frame, elementData) end)
   end
 end
 
