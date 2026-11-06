@@ -5,6 +5,9 @@ _G.LegacyManagerAPI = API
 
 function API.IsActive() return ns.active and true or false end
 
+-- Opens the Legacy window, or the copilot window before the Legacy unlock
+function API.Open() if ns.Minimap and ns.Minimap.OpenLegacy then ns.Minimap.OpenLegacy() end end
+
 -- Next open class milestone (Legacy challenge) above the given level: level, points.
 function API.NextClassMilestone(classFile, level)
   if not ns.active or not ns.Challenges then return nil end

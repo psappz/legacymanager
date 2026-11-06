@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.0
+
+### New
+- **Legacy perks in the unit tooltip** of group members who use LegacyManager.
+- **Manager family bar** in the settings is clickable: opens the other installed Manager addons.
+
 ## 1.1.0
 
 ### New

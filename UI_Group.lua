@@ -215,3 +215,34 @@ function UG.Toggle()
     GR.Request()
   end
 end
+
+---------------------------------------------------------------------------
+-- Unit tooltip: Legacy perks of group members that use LegacyManager (data from the group view)
+---------------------------------------------------------------------------
+local function addUnitLines(tooltip, unit)
+  if not (ns.db and ns.db.unitTooltip ~= false) then return end
+  if not unit or not UnitIsPlayer(unit) or UnitIsUnit(unit, "player") then return end
+  if not (UnitInParty(unit) or UnitInRaid(unit)) then return end
+  local m = GR.members[UnitGUID(unit)]
+  if not m or not m.ranks then return end
+  local parts, total = {}, 0
+  for _, spellID in ipairs(GR.COLUMNS) do
+    local r = m.ranks[spellID]
+    if r and r > 0 then parts[#parts + 1] = spellName(spellID) .. " " .. r end
+  end
+  for _, r in pairs(m.ranks) do total = total + r end
+  tooltip:AddLine("LegacyManager: " .. (#parts > 0 and table.concat(parts, " · ") or ns.L.GV_NONE_SPENT), 0.31, 0.64, 1, true)
+end
+
+if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
+  TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Unit, function(tooltip)
+    if tooltip ~= GameTooltip then return end
+    local _, unit = tooltip:GetUnit()
+    pcall(addUnitLines, tooltip, unit)
+  end)
+elseif GameTooltip.HookScript then
+  GameTooltip:HookScript("OnTooltipSetUnit", function(tooltip)
+    local _, unit = tooltip:GetUnit()
+    pcall(addUnitLines, tooltip, unit)
+  end)
+end
