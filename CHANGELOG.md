@@ -3,6 +3,7 @@
 ## 1.2.0
 
 ### New
+- **New icon:** golden Legacy tree in the Manager family style.
 - **Legacy perks in the unit tooltip** of group members who use LegacyManager.
 - **Manager family bar** in the settings is clickable: opens the other installed Manager addons.
 
