@@ -8,59 +8,17 @@ local owner = {}
 ---------------------------------------------------------------------------
 -- Dialogs: loadout name, Talented warning
 ---------------------------------------------------------------------------
-local function editBoxOf(dialog)
-  return dialog.editBox or dialog.EditBox or (dialog.GetEditBox and dialog:GetEditBox())
-end
-
-local function acceptName(dialog, data)
-  local box = editBoxOf(dialog)
-  local name = box and strtrim(box:GetText() or "") or ""
+local function acceptName(text, renameFrom)
+  local name = strtrim(text or "")
   if name == "" then return end
-  if data and data.rename then
-    if not LO.Rename(data.rename, name) then U.Print(ns.L.LO_NAME_TAKEN:format(name)) end
+  if renameFrom then
+    if not LO.Rename(renameFrom, name) then U.Print(ns.L.LO_NAME_TAKEN:format(name)) end
   else
     LO.SaveCurrent(name)
     U.Print(ns.L.LO_SAVED:format(name))
   end
   UL.Refresh()
 end
-
-StaticPopupDialogs["LEGACYMANAGER_NAME"] = {
-  text = "%s",
-  button1 = OKAY,
-  button2 = CANCEL,
-  hasEditBox = 1,
-  maxLetters = 32,
-  OnShow = function(self, data)
-    local box = editBoxOf(self)
-    if box then box:SetText(data and data.rename or ""); box:SetFocus() end
-  end,
-  OnAccept = function(self, data) ns.SafeCall("loadoutName", acceptName, self, data) end,
-  EditBoxOnEnterPressed = function(self)
-    local dialog = self:GetParent()
-    ns.SafeCall("loadoutName", acceptName, dialog, dialog.data)
-    dialog:Hide()
-  end,
-  EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
-  timeout = 0, whileDead = 1, hideOnEscape = 1,
-}
-
-StaticPopupDialogs["LEGACYMANAGER_TALENTED"] = {
-  text = "%s",
-  button1 = "", -- set in Ask, localized
-  button2 = CANCEL,
-  OnAccept = function(_, data) ns.SafeCall("applyBoth", SW.Apply, data.loadout, { unlearnBoth = true }) end,
-  timeout = 0, whileDead = 1, hideOnEscape = 1,
-}
-
-StaticPopupDialogs["LEGACYMANAGER_CONFIRM"] = {
-  text = "%s",
-  button1 = ACCEPT,
-  button2 = CANCEL,
-  OnAccept = function(_, data) ns.SafeCall("confirmApply", data.run) end,
-  showAlert = 1,
-  timeout = 0, whileDead = 1, hideOnEscape = 1,
-}
 
 -- Shows every change of the loadout and asks before anything is spent.
 function UL.ConfirmApply(loadout, run)
@@ -76,12 +34,25 @@ function UL.ConfirmApply(loadout, run)
   local text = L.CONFIRM_HEAD:format(loadout.name) .. "\n\n" .. table.concat(lines, "\n") .. "\n\n"
     .. (needsReset and L.CONFIRM_RESET or L.CONFIRM_FINAL)
   if ns.cdb.wipeCost then text = text .. "\n" .. L.CONFIRM_LASTCOST:format(GetMoneyString(ns.cdb.wipeCost, true)) end
-  StaticPopup_Show("LEGACYMANAGER_CONFIRM", text, nil, { run = run })
+  W.Dialog({ text = text, accept = ACCEPT or "OK", onAccept = function() ns.SafeCall("confirmApply", run) end })
+end
+
+local function showCode(l)
+  W.Dialog({ text = ns.L.LO_CODE_COPY:format(l.name), edit = true, editText = LO.Export(l) })
+end
+
+local function askCode()
+  W.Dialog({ text = ns.L.LO_CODE_PASTE, edit = true, onAccept = function(code)
+    ns.SafeCall("importCode", function()
+      local l, err = LO.Import(code)
+      if l then U.Print(ns.L.LO_IMPORTED:format(l.name)); UL.Refresh() else U.Print(ns.L[err] or err) end
+    end)
+  end })
 end
 
 local function askName(renameFrom)
-  StaticPopup_Show("LEGACYMANAGER_NAME", renameFrom and ns.L.LO_RENAME_PROMPT or ns.L.LO_NAME_PROMPT, nil,
-    { rename = renameFrom })
+  W.Dialog({ text = renameFrom and ns.L.LO_RENAME_PROMPT or ns.L.LO_NAME_PROMPT, edit = true, editText = renameFrom or "",
+    maxLetters = 32, onAccept = function(name) ns.SafeCall("loadoutName", acceptName, name, renameFrom) end })
 end
 
 -- Applies a loadout; on a Talented deficit the player chooses first.
@@ -89,9 +60,8 @@ function UL.Apply(loadout)
   UL.ConfirmApply(loadout, function()
     local result = SW.Apply(loadout)
     if result == "deficit" then
-      StaticPopupDialogs["LEGACYMANAGER_TALENTED"].button1 = ns.L.LO_BOTH
-      StaticPopup_Show("LEGACYMANAGER_TALENTED", ns.L.LO_TALENTED_WARN:format(UnitLevel("player") or 0), nil,
-        { loadout = loadout })
+      W.Dialog({ text = ns.L.LO_TALENTED_WARN:format(UnitLevel("player") or 0), accept = ns.L.LO_BOTH,
+        onAccept = function() ns.SafeCall("applyBoth", SW.Apply, loadout, { unlearnBoth = true }) end })
     end
   end)
 end
@@ -111,6 +81,7 @@ local function menu(_, root)
   end
   root:CreateDivider()
   root:CreateButton(L.LO_SAVE_NEW, function() askName(nil) end)
+  root:CreateButton(L.LO_IMPORT, function() askCode() end)
   if #list > 0 then
     local over = root:CreateButton(L.LO_OVERWRITE)
     for _, l in ipairs(list) do
@@ -119,6 +90,7 @@ local function menu(_, root)
     local manage = root:CreateButton(L.LO_MANAGE)
     for _, l in ipairs(list) do
       local sub = manage:CreateButton(l.name)
+      sub:CreateButton(L.LO_SHARE, function() showCode(l) end)
       sub:CreateButton(L.LO_RENAME, function() askName(l.name) end)
       sub:CreateButton(l.raid and L.LO_UNMARK_RAID or L.LO_MARK_RAID, function()
         LO.SetRaid(not l.raid and l.name or nil); UL.Refresh()
@@ -150,7 +122,7 @@ local function buildDropdown(page)
   arrow:SetPoint("RIGHT", -6, -6)
   box.name = name
   box:SetScript("OnMouseUp", function(self)
-    if MenuUtil and MenuUtil.CreateContextMenu then MenuUtil.CreateContextMenu(self, menu) end
+    W.OpenMenu(self, menu)
   end)
   box:SetScript("OnEnter", function(self) self:SetBackdropColor(W.C.bgHover[1], W.C.bgHover[2], W.C.bgHover[3], W.C.bgHover[4]) end)
   box:SetScript("OnLeave", function(self) self:SetBackdropColor(W.C.bg[1], W.C.bg[2], W.C.bg[3], W.C.bg[4]) end)

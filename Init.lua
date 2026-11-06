@@ -40,6 +40,7 @@ SlashCmdList.LEGACYMANAGER = function(msg)
   if cmd == "seen" then ns.SafeCall("seen", LG.MarkAllSeen)
   elseif cmd == "status" then
     for _, l in ipairs(ns.Minimap.StatusLines()) do U.Print(l[1]) end
+    U.Print(ns.Family.Line(ns.L.FAMILY))
   elseif cmd == "minimap" then ns.Minimap.ToggleShown()
   elseif cmd == "matrix" or cmd == "alts" then ns.SafeCall("matrix", ns.UIMatrix.Toggle)
   elseif cmd == "copilot" then ns.UICopilot.ToggleShown()
@@ -68,7 +69,10 @@ end
 function handlers.PLAYER_LOGIN(self)
   ns.active = D.HasLegacy()
   if not ns.active then return end
-  ns.Minimap.Create()
+  -- Created late on purpose (as in DungeonManager and ConfigManager): minimap skins such as EllesmereUI
+  -- rescan the minimap shortly after login and hide buttons that already exist; collectors such as
+  -- MinimapButtonButton then show an empty slot. Created afterwards, the button stays visible.
+  -- (see handlers.PLAYER_ENTERING_WORLD)
   if U.IsAddOnLoaded("Blizzard_LegacySystem") then attachLegacyUI() end
   for _, e in ipairs({ "PLAYER_LEVEL_UP", "PLAYER_XP_UPDATE", "UPDATE_EXHAUSTION", "SKILL_LINES_CHANGED",
     "TRAIT_CONFIG_UPDATED", "ACHIEVEMENT_EARNED", "CRITERIA_UPDATE", "MAJOR_FACTION_RENOWN_LEVEL_CHANGED",
@@ -132,6 +136,10 @@ end
 function handlers.PLAYER_LEAVING_WORLD() ns.leaving = true end
 function handlers.PLAYER_ENTERING_WORLD()
   ns.leaving = false
+  if not ns.minimapScheduled then
+    ns.minimapScheduled = true
+    C_Timer.After(2, function() ns.SafeCall("minimap", ns.Minimap.Create) end)
+  end
   snapshotSoon(3)
   ns.Schedule("lmRaid", 5, ns.Swap.CheckRaid)
 end

@@ -45,15 +45,33 @@ local function makeCard(parent)
   return card
 end
 
-local function build()
-  if UC.panel or not LegacySystemFrame then return end
-  local p = W.Box(LegacySystemFrame, PANEL_W, 520)
-  -- Blizzard's page tabs hang outside the right edge of the window: start right of them.
-  local tab = LegacySystemFrame.LegacyRewardTrackTab or (LegacySystemFrame.Tabs and LegacySystemFrame.Tabs[1])
-  p:SetPoint("TOP", LegacySystemFrame, "TOP", 0, 0)
-  p:SetPoint("BOTTOM", LegacySystemFrame, "BOTTOM", 0, 0)
-  if tab then p:SetPoint("LEFT", tab, "RIGHT", 6, 0)
-  else p:SetPoint("LEFT", LegacySystemFrame, "RIGHT", 50, 0) end
+-- standalone = own window (characters below the Legacy unlock: level 25 or skill 225)
+local function build(standalone)
+  if standalone then
+    if UC.solo then return end
+  elseif UC.panel or not LegacySystemFrame then return end
+  local p
+  if standalone then
+    p = W.Box(UIParent, PANEL_W, 600)
+    p:SetPoint("CENTER", UIParent, "CENTER", 250, 0)
+    p:SetFrameStrata("HIGH")
+    p:SetMovable(true)
+    p:EnableMouse(true)
+    p:RegisterForDrag("LeftButton")
+    p:SetScript("OnDragStart", p.StartMoving)
+    p:SetScript("OnDragStop", p.StopMovingOrSizing)
+    p:SetClampedToScreen(true)
+    tinsert(UISpecialFrames, "LegacyManagerCopilot")
+    _G.LegacyManagerCopilot = p
+  else
+    p = W.Box(LegacySystemFrame, PANEL_W, 520)
+    -- Blizzard's page tabs hang outside the right edge of the window: start right of them.
+    local tab = LegacySystemFrame.LegacyRewardTrackTab or (LegacySystemFrame.Tabs and LegacySystemFrame.Tabs[1])
+    p:SetPoint("TOP", LegacySystemFrame, "TOP", 0, 0)
+    p:SetPoint("BOTTOM", LegacySystemFrame, "BOTTOM", 0, 0)
+    if tab then p:SetPoint("LEFT", tab, "RIGHT", 6, 0)
+    else p:SetPoint("LEFT", LegacySystemFrame, "RIGHT", 50, 0) end
+  end
   p:SetBackdropColor(0.094, 0.125, 0.165, 0.97)
 
   local head = p:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -65,11 +83,9 @@ local function build()
   sub:SetTextColor(0.62, 0.71, 0.78)
   p.sub = sub
 
-  local close = CreateFrame("Button", nil, p, "UIPanelCloseButtonNoScripts")
-  close:SetPoint("TOPRIGHT", 2, 2)
-  close:SetScript("OnClick", function()
+  W.Close(p, function()
     p:Hide()
-    if not ns.closeHintShown then ns.closeHintShown = true; U.Print(ns.L.CP_CLOSED) end
+    if not standalone and not ns.closeHintShown then ns.closeHintShown = true; U.Print(ns.L.CP_CLOSED) end
   end)
 
   -- next reward strip
@@ -82,6 +98,13 @@ local function build()
   rbar:SetPoint("TOPLEFT", rw, "BOTTOMLEFT", 0, -4)
   rbar:SetPoint("RIGHT", -12, 0)
   p.reward, p.rewardBar = rw, rbar
+  -- reward tracker: hover the strip for every reward of the season
+  local hover = CreateFrame("Frame", nil, p)
+  hover:SetPoint("TOPLEFT", rw, "TOPLEFT", 0, 2)
+  hover:SetPoint("BOTTOMRIGHT", rbar, "BOTTOMRIGHT", 0, -2)
+  hover:EnableMouse(true)
+  hover:SetScript("OnEnter", function(self) ns.SafeCall("rewardTip", UC.RewardTooltip, self) end)
+  hover:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
   local line = p:CreateTexture(nil, "ARTWORK")
   line:SetColorTexture(0.18, 0.29, 0.41, 1)
@@ -108,6 +131,22 @@ local function build()
   p.unknown:SetJustifyH("LEFT")
   p.unknown:SetTextColor(0.94, 0.71, 0.35)
 
+  -- DungeonManager: best dungeon for the logged-in character (only when DungeonManager is installed)
+  local dg = CreateFrame("Button", nil, p)
+  dg:SetPoint("BOTTOMLEFT", 12, 62)
+  dg:SetPoint("RIGHT", -12, 0)
+  dg:SetHeight(28)
+  dg.text = dg:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  dg.text:SetAllPoints()
+  dg.text:SetJustifyH("LEFT")
+  dg.text:SetJustifyV("TOP")
+  dg.text:SetTextColor(0.81, 0.90, 1)
+  dg:SetScript("OnClick", function(self)
+    local api = _G.DungeonManagerAPI
+    if api and self.key then ns.SafeCall("openDungeon", api.Open, self.key) end
+  end)
+  p.dungeon = dg
+
   local mx = W.Button(p, ns.L.BTN_MATRIX, nil, 26)
   mx:SetPoint("BOTTOMLEFT", 12, 12)
   mx:SetPoint("BOTTOMRIGHT", p, "BOTTOM", -3, 12)
@@ -118,12 +157,23 @@ local function build()
   mx:SetScript("OnClick", function() ns.SafeCall("matrix", ns.UIMatrix.Toggle) end)
 
   p:SetScript("OnShow", function() ns.Schedule("lmCopilot", 0, UC.Refresh) end)
-  UC.panel = p
+  if standalone then UC.solo = p else UC.panel = p end
 end
 
+-- Own copilot window, for characters whose Legacy window is still locked
+function UC.ToggleStandalone()
+  build(true)
+  if UC.solo:IsShown() then UC.solo:Hide() else UC.solo:Show() end
+end
+
+local refreshOne
 function UC.Refresh()
-  local p = UC.panel
-  if not p or not p:IsVisible() then return end
+  for _, p in ipairs({ UC.panel, UC.solo }) do
+    if p and p:IsVisible() then refreshOne(p) end
+  end
+end
+
+refreshOne = function(p)
   local L = ns.L
   local v = view()
   p.sub:SetText(v == "hardcore" and L.CP_SUB_HC or L.CP_SUB)
@@ -160,7 +210,33 @@ function UC.Refresh()
     end
   end
   p.empty:SetShown(#items == 0)
+
+  local api = _G.DungeonManagerAPI
+  local best = api and api.Suggest and (U.Try(api.Suggest, 1) or {})[1]
+  if best then
+    p.dungeon.key = best.key
+    local xp = (best.xp and best.xp > 0) and (" · " .. L.CP_DUNGEON_XP:format(BreakUpLargeNumbers and BreakUpLargeNumbers(best.xp) or best.xp)) or ""
+    p.dungeon.text:SetText(U.Color("ffffd100", "DungeonManager: ") .. L.CP_DUNGEON:format(best.name, best.open) .. xp)
+    p.dungeon:Show()
+  else
+    p.dungeon.key = nil
+    p.dungeon:Hide()
+  end
   p.unknown:SetText(unknown > 0 and L.CP_UNKNOWN:format(unknown) or "")
+end
+
+function UC.RewardTooltip(owner)
+  local L = ns.L
+  local list, earned = LG.Rewards()
+  GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+  GameTooltip:AddLine(L.REWARD_TRACK_TITLE:format(earned), 1, 0.82, 0)
+  for _, e in ipairs(list) do
+    local names = table.concat(e.names, ", ")
+    if e.ready then GameTooltip:AddDoubleLine(e.level .. "  " .. names, L.REWARD_STATE_READY, 1, 1, 1, 1, 0.71, 0.35)
+    elseif e.reached then GameTooltip:AddDoubleLine(e.level .. "  " .. names, L.REWARD_STATE_DONE, 0.56, 0.89, 0.62, 0.56, 0.89, 0.62)
+    else GameTooltip:AddDoubleLine(e.level .. "  " .. names, L.REWARD_STATE_OPEN:format(e.level - earned), 0.62, 0.71, 0.78, 0.62, 0.71, 0.78) end
+  end
+  GameTooltip:Show()
 end
 
 ---------------------------------------------------------------------------

@@ -4,6 +4,24 @@ local ADDON, ns = ...
 local LOCALES = {}
 
 LOCALES.enUS = {
+  LEGACY_LOCKED = "The Legacy window unlocks at level 25 or skill 225 – until then LegacyManager shows its copilot as its own window.",
+  -- 1.1.0
+  LO_SHARE = "Copy share code",
+  LO_IMPORT = "Import share code…",
+  LO_CODE_COPY = "Share code of \"%s\" – copy it with Ctrl+C:",
+  LO_CODE_PASTE = "Paste a LegacyManager share code (Ctrl+V):",
+  LO_IMPORTED = "Loadout \"%s\" imported.",
+  LO_CODE_INVALID = "That is not a valid LegacyManager share code.",
+  REWARD_TRACK_TITLE = "Reward track · %d points earned",
+  REWARD_STATE_READY = "ready to collect",
+  REWARD_STATE_DONE = "reached",
+  REWARD_STATE_OPEN = "%d to go",
+  CP_DUNGEON = "%s · %d open quests",
+  CP_DUNGEON_XP = "%s XP",
+  GV_TELL_HINT = "Click: whisper them where to get LegacyManager (once).",
+  GV_TOLD = "Told them about LegacyManager.",
+  GV_TELL_TEXT = "Hi! I use LegacyManager to compare Legacy perks in the group – it is free on CurseForge (search for LegacyManager).",
+  FAMILY = "Manager family",
   LOADED = "Loaded. /lm shows the commands.",
   NOT_FOREVER = "This client has no Legacy system – LegacyManager stays inactive.",
   HELP = "Commands: /lm (open Legacy window) · /lm matrix (alt overview) · /lm copilot (show/hide panel) · /lm group (group view) · /lm names (perk names in the tree) · /lm raidwarn · /lm seen (mark all challenges as seen) · /lm status · /lm minimap · /lm errors",
@@ -157,6 +175,24 @@ LOCALES.enUS = {
 }
 
 LOCALES.deDE = {
+  LEGACY_LOCKED = "Das Legacy-Fenster wird mit Stufe 25 oder Fertigkeit 225 freigeschaltet – bis dahin zeigt LegacyManager den Copilot als eigenes Fenster.",
+  -- 1.1.0
+  LO_SHARE = "Teilen-Code kopieren",
+  LO_IMPORT = "Teilen-Code importieren …",
+  LO_CODE_COPY = "Teilen-Code von „%s“ – mit Strg+C kopieren:",
+  LO_CODE_PASTE = "LegacyManager-Teilen-Code einfügen (Strg+V):",
+  LO_IMPORTED = "Loadout „%s“ importiert.",
+  LO_CODE_INVALID = "Das ist kein gültiger LegacyManager-Teilen-Code.",
+  REWARD_TRACK_TITLE = "Belohnungsleiste · %d Punkte verdient",
+  REWARD_STATE_READY = "abholbereit",
+  REWARD_STATE_DONE = "erreicht",
+  REWARD_STATE_OPEN = "noch %d",
+  CP_DUNGEON = "%s · %d offene Quests",
+  CP_DUNGEON_XP = "%s EP",
+  GV_TELL_HINT = "Klick: anflüstern, wo es LegacyManager gibt (einmalig).",
+  GV_TOLD = "Über LegacyManager informiert.",
+  GV_TELL_TEXT = "Hi! Ich vergleiche die Legacy-Perks der Gruppe mit LegacyManager – kostenlos auf CurseForge (Suche: LegacyManager).",
+  FAMILY = "Manager-Familie",
   LOADED = "Geladen. /lm zeigt die Befehle.",
   NOT_FOREVER = "Dieser Client hat kein Legacy-System – LegacyManager bleibt inaktiv.",
   HELP = "Befehle: /lm (Legacy-Fenster öffnen) · /lm matrix (Alt-Matrix) · /lm copilot (Panel ein/aus) · /lm group (Gruppen-Sicht) · /lm names (Perk-Namen im Baum) · /lm raidwarn · /lm seen (alle Challenges als gesehen markieren) · /lm status · /lm minimap · /lm errors",

@@ -28,6 +28,10 @@ local function showMemberTooltip(row)
   GameTooltip:SetText(m.full or m.name or "?", classColor(m.class))
   if not m.ranks then
     GameTooltip:AddLine(ns.L.GV_NO_ADDON, 0.62, 0.71, 0.78, true)
+    if not m.self then
+      local told = ns.toldAbout and ns.toldAbout[m.guid]
+      GameTooltip:AddLine(told and ns.L.GV_TOLD or ns.L.GV_TELL_HINT, 1, 0.82, 0, true)
+    end
   else
     local list = {}
     for spellID, rank in pairs(m.ranks) do list[#list + 1] = { name = spellName(spellID), rank = rank } end
@@ -69,9 +73,7 @@ local function build()
   f.sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -2)
   f.sub:SetTextColor(0.62, 0.71, 0.78)
 
-  local close = CreateFrame("Button", nil, f, "UIPanelCloseButtonNoScripts")
-  close:SetPoint("TOPRIGHT", 2, 2)
-  close:SetScript("OnClick", function() f:Hide() end)
+  W.Close(f)
 
   local refresh = W.Button(f, L.GV_REFRESH, nil, 22)
   refresh:SetPoint("TOPRIGHT", -34, -10)
@@ -113,6 +115,15 @@ local function build()
     end
     row:EnableMouse(true)
     row:SetScript("OnEnter", showMemberTooltip)
+    row:SetScript("OnMouseUp", function(self)
+      local m = self.member
+      if not m or m.ranks or m.self or not m.full then return end
+      ns.toldAbout = ns.toldAbout or {}
+      if ns.toldAbout[m.guid] then return end         -- once per member and session
+      ns.toldAbout[m.guid] = true
+      ns.SafeCall("tell", SendChatMessage, ns.L.GV_TELL_TEXT, "WHISPER", nil, m.full)
+      showMemberTooltip(self)
+    end)
     row:SetScript("OnLeave", function() GameTooltip:Hide() end)
     f.rows[r] = row
   end

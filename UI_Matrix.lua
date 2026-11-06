@@ -89,9 +89,7 @@ local function build()
   title:SetText(ns.L.MX_TITLE)
   title:SetTextColor(1, 0.82, 0)
 
-  local close = CreateFrame("Button", nil, f, "UIPanelCloseButtonNoScripts")
-  close:SetPoint("TOPRIGHT", 2, 2)
-  close:SetScript("OnClick", function() f:Hide() end)
+  W.Close(f)
 
   -- Normal / Hardcore switch
   f.normalBtn = W.Button(f, ns.L.MX_NORMAL, nil, 22)

@@ -201,3 +201,41 @@ function LO.Spend(target)
   end
   return bought, missing
 end
+
+---------------------------------------------------------------------------
+-- Share codes: "!LM1!<class>!<name>!<node>=<rank>,..." (plain text, safe for chat and Discord)
+---------------------------------------------------------------------------
+function LO.Export(l)
+  local _, classFile = UnitClass("player")
+  local parts = {}
+  local ids = {}
+  for nodeID in pairs(l.ranks) do ids[#ids + 1] = nodeID end
+  table.sort(ids)
+  for _, nodeID in ipairs(ids) do
+    local r = l.ranks[nodeID]
+    if r and r > 0 then parts[#parts + 1] = nodeID .. "=" .. r end
+  end
+  local name = (l.name or "?"):gsub("!", "")
+  return "!LM1!" .. (classFile or "?") .. "!" .. name .. "!" .. table.concat(parts, ",")
+end
+
+-- Returns the new loadout, or nil and an error key.
+function LO.Import(code)
+  code = (code or ""):gsub("^%s+", ""):gsub("%s+$", "")
+  local classFile, name, body = code:match("^!LM1!([^!]*)!([^!]*)!([%d=,]*)$")
+  if not body then return nil, "LO_CODE_INVALID" end
+  local ranks, n = {}, 0
+  for nodeID, rank in body:gmatch("(%d+)=(%d+)") do
+    nodeID, rank = tonumber(nodeID), tonumber(rank)
+    if rank < 0 or rank > 20 then return nil, "LO_CODE_INVALID" end
+    ranks[nodeID] = rank
+    n = n + 1
+  end
+  if n == 0 then return nil, "LO_CODE_INVALID" end
+  if name == "" then name = "Import" end
+  local base, i = name, 2
+  while LO.Find(name) do name = base .. " (" .. i .. ")"; i = i + 1 end
+  local l = { name = name, ranks = ranks, from = classFile }
+  table.insert(LO.List(), l)
+  return l
+end

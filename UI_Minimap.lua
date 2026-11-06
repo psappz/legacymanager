@@ -3,11 +3,20 @@ local U, LG, D = ns.U, ns.Legacy, ns.Data
 local MM = {}
 ns.Minimap = MM
 
-local ICON = "Interface\\Icons\\achievement_guildperk_everybodysfriend"
+-- own icon: retail icon files such as achievement_guildperk_everybodysfriend do not exist in Forever
+local ICON = "Interface\\AddOns\\LegacyManager\\Media\\LegacyManager"
 
+-- The Legacy window unlocks at level 25 or skill 225. Until then the copilot opens as its own window.
 function MM.OpenLegacy()
   if InCombatLockdown() then U.Print(ns.L.IN_COMBAT); return end
-  if ToggleLegacySystemUI then ToggleLegacySystemUI() end
+  if LegacySystemFrame and LegacySystemFrame:IsShown() then ToggleLegacySystemUI(); return end
+  if ToggleLegacySystemUI then pcall(ToggleLegacySystemUI) end
+  C_Timer.After(0.2, function()
+    if not (LegacySystemFrame and LegacySystemFrame:IsShown()) then
+      if not ns.lockedHintShown then ns.lockedHintShown = true; U.Print(ns.L.LEGACY_LOCKED) end
+      ns.SafeCall("copilotStandalone", ns.UICopilot.ToggleStandalone)
+    end
+  end)
 end
 
 -- Lines for tooltips and /lm status
