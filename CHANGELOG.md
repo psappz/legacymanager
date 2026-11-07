@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2
+
+### Fixes
+- The libraries (LibStub, CallbackHandler, LibDataBroker, LibDBIcon) are now part of the addon. Installs without them caused "Error loading ... Libs" messages at login.
+- API.lua was listed twice in the TOC ("Duplicate File Load Detected").
+
 ## 1.2.1
 
 ### Look
