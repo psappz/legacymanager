@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.3
+
+- In-game addon list: the addon now has a category, so it is grouped with similar addons (translated into the six interface languages).
+
 ## 1.2.2
 
 ### Fixes
